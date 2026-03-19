@@ -9,97 +9,105 @@
 
 <style>
 body {
-  margin: 0;
-  background: black;
-  color: white;
-  font-family: Arial;
+  margin:0;
+  background:#000;
+  color:white;
+  font-family:Arial;
 }
 
 /* Header */
 .header {
-  padding: 15px;
-  font-size: 24px;
-  color: #e50914;
-  font-weight: bold;
+  padding:15px;
+  font-size:28px;
+  color:#e50914;
+  font-weight:bold;
 }
 
-/* Home */
+/* Search */
+.search {
+  padding:10px;
+}
+.search input {
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+}
+
+/* Row */
 .row {
-  display: flex;
-  overflow-x: auto;
-  gap: 10px;
-  padding: 10px;
+  display:flex;
+  overflow-x:auto;
+  gap:10px;
+  padding:10px;
 }
 
+/* Card */
 .card {
-  min-width: 150px;
-  height: 220px;
-  background: #222;
-  border-radius: 10px;
-  display: flex;
-  align-items: end;
-  padding: 10px;
-  cursor: pointer;
+  min-width:160px;
+  height:240px;
+  border-radius:10px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:.3s;
 }
-
+.card img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
 .card:hover {
-  transform: scale(1.05);
+  transform:scale(1.1);
 }
 
 /* Player */
 video {
-  width: 100%;
-  height: 230px;
-  object-fit: cover;
-}
-
-/* Episodes */
-.episode {
-  background: #1a1a1a;
-  margin: 6px;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  position: relative;
-}
-
-.delete {
-  position: absolute;
-  right: 10px;
-  color: red;
-  display: none;
-}
-
-.admin .delete {
-  display: block;
+  width:100%;
+  height:260px;
+  object-fit:cover;
 }
 
 /* Panel */
 .panel {
-  padding: 10px;
+  padding:10px;
 }
-
-input, button {
-  width: 100%;
-  margin-top: 6px;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
+input,button {
+  width:100%;
+  margin-top:5px;
+  padding:10px;
+  border-radius:8px;
+  border:none;
 }
-
 button {
-  background: #e50914;
-  color: white;
+  background:#e50914;
+  color:white;
 }
 
-/* hidden */
-#playerPage { display: none; }
+/* Episode */
+.episode {
+  background:#1a1a1a;
+  margin:5px;
+  padding:10px;
+  border-radius:8px;
+  cursor:pointer;
+  position:relative;
+}
+.delete {
+  position:absolute;
+  right:10px;
+  color:red;
+  display:none;
+}
+.admin .delete { display:block; }
+
+/* Pages */
+#playerPage { display:none; }
 
 .secret {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  opacity: 0.3;
+  position:fixed;
+  bottom:10px;
+  right:10px;
+  opacity:0.2;
 }
 </style>
 </head>
@@ -108,35 +116,39 @@ button {
 
 <div class="header">NETFLIX+</div>
 
-<!-- 🏠 الصفحة الرئيسية -->
 <div id="home">
 
-  <div class="row">
-    <div class="card" onclick="openSeries('series1')">Series 1</div>
-    <div class="card" onclick="openSeries('series2')">Series 2</div>
-  </div>
+<div class="search">
+<input id="search" placeholder="Search..." oninput="filterSeries()">
+</div>
+
+<div class="row" id="seriesRow"></div>
 
 </div>
 
-<!-- 🎬 صفحة المشاهدة -->
 <div id="playerPage">
 
-  <video id="video" controls></video>
+<video id="video" controls></video>
+<div id="title" style="padding:10px;"></div>
 
-  <div id="title" style="padding:10px;">Episode</div>
+<div class="panel">
 
-  <div class="panel">
+<input type="file" id="file">
+<input type="text" id="link" placeholder="Drive / Direct / m3u8">
 
-    <input type="file" id="file">
-    <input type="text" id="link" placeholder="Drive / Direct Link">
-    <input type="number" id="num" placeholder="Episode Number">
+<input type="number" id="num" placeholder="Episode Number">
 
-    <button onclick="add()">Add Episode</button>
-    <button onclick="back()">⬅ Back</button>
+<button onclick="add()">Add Episode</button>
+<button onclick="back()">⬅ Back</button>
 
-  </div>
+<div style="margin-top:10px;border:2px dashed #444;padding:15px;text-align:center"
+ondrop="drop(event)" ondragover="event.preventDefault()">
+Drag & Drop Video Here
+</div>
 
-  <div id="episodes"></div>
+</div>
+
+<div id="episodes"></div>
 
 </div>
 
@@ -144,22 +156,50 @@ button {
 
 <script>
 let hls;
-let current = 0;
-let currentSeries = "";
-let isAdmin = false;
+let current=0;
+let currentSeries="";
+let isAdmin=false;
 
-// بيانات المسلسلات
-let data = {
-  series1: [],
-  series2: []
+// بيانات
+let data=JSON.parse(localStorage.getItem("data"))||{
+  action:[],
+  drama:[]
 };
 
-// فتح مسلسل
+// صور
+const posters={
+  action:"https://via.placeholder.com/300x450?text=Action",
+  drama:"https://via.placeholder.com/300x450?text=Drama"
+};
+
+// عرض مسلسلات
+function renderSeries(){
+  const row=document.getElementById("seriesRow");
+  row.innerHTML="";
+  Object.keys(data).forEach(name=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`<img src="${posters[name]}">`;
+    div.onclick=()=>openSeries(name);
+    row.appendChild(div);
+  });
+}
+
+// بحث
+function filterSeries(){
+  const val=document.getElementById("search").value.toLowerCase();
+  const cards=document.querySelectorAll(".card");
+  cards.forEach((c,i)=>{
+    const name=Object.keys(data)[i];
+    c.style.display=name.includes(val)?"block":"none";
+  });
+}
+
+// فتح
 function openSeries(name){
-  currentSeries = name;
+  currentSeries=name;
   document.getElementById("home").style.display="none";
   document.getElementById("playerPage").style.display="block";
-
   loadLast();
   render();
   play();
@@ -171,95 +211,103 @@ function back(){
   document.getElementById("playerPage").style.display="none";
 }
 
-// إضافة حلقة
+// إضافة
 function add(){
-  const num = document.getElementById("num").value;
-  const file = document.getElementById("file").files[0];
-  const link = document.getElementById("link").value;
+  const num=document.getElementById("num").value;
+  const file=document.getElementById("file").files[0];
+  const link=document.getElementById("link").value;
 
   let src="";
 
   if(file){
-    src = URL.createObjectURL(file);
+    src=URL.createObjectURL(file);
   } else if(link){
-    const id = link.match(/[-\w]{25,}/);
+    const id=link.match(/[-\w]{25,}/);
     if(id){
-      src = "https://drive.google.com/uc?export=download&id="+id[0];
+      src="https://drive.google.com/uc?export=download&id="+id[0];
     } else {
-      src = link;
+      src=link;
     }
   }
 
-  if(!num || !src) return alert("❌");
+  if(!num||!src)return alert("❌");
 
-  data[currentSeries].push({num:parseInt(num), url:src});
+  data[currentSeries].push({num:parseInt(num),url:src});
   data[currentSeries].sort((a,b)=>a.num-b.num);
-
+  save();
   render();
 }
 
-// عرض الحلقات
+// Drag drop
+function drop(e){
+  e.preventDefault();
+  const file=e.dataTransfer.files[0];
+  document.getElementById("file").files=e.dataTransfer.files;
+}
+
+// عرض حلقات
 function render(){
-  const box = document.getElementById("episodes");
+  const box=document.getElementById("episodes");
   box.innerHTML="";
-
   data[currentSeries].forEach((ep,i)=>{
-    const div = document.createElement("div");
+    const div=document.createElement("div");
     div.className="episode";
-    div.innerHTML = `
-      Episode ${ep.num}
-      <span class="delete" onclick="del(${i})">🗑</span>
-    `;
-
-    div.onclick=()=>{current=i; play();};
-
+    div.innerHTML=`Episode ${ep.num}
+    <span class="delete" onclick="del(${i})">🗑</span>`;
+    div.onclick=()=>{current=i;play();}
     box.appendChild(div);
   });
 }
 
 // تشغيل
 function play(){
-  const v = document.getElementById("video");
-  const ep = data[currentSeries][current];
-  if(!ep) return;
-
+  const v=document.getElementById("video");
+  const ep=data[currentSeries][current];
+  if(!ep)return;
   document.getElementById("title").innerText="Episode "+ep.num;
-
-  localStorage.setItem("last_"+currentSeries, current);
+  localStorage.setItem("last_"+currentSeries,current);
 
   if(ep.url.includes(".m3u8")){
-    if(hls) hls.destroy();
-    hls = new Hls();
+    if(hls)hls.destroy();
+    hls=new Hls();
     hls.loadSource(ep.url);
     hls.attachMedia(v);
   } else {
-    if(hls) hls.destroy();
-    v.src = ep.url;
+    if(hls)hls.destroy();
+    v.src=ep.url;
   }
 }
 
 // حذف
 function del(i){
-  if(!isAdmin) return alert("❌ Not allowed");
+  if(!isAdmin)return alert("❌");
   data[currentSeries].splice(i,1);
+  save();
   render();
+}
+
+// حفظ
+function save(){
+  localStorage.setItem("data",JSON.stringify(data));
 }
 
 // أدمن
 function login(){
-  const p = prompt("code");
+  const p=prompt("code");
   if(p=="2030"){
-    isAdmin = true;
+    isAdmin=true;
     document.body.classList.add("admin");
-    alert("🔥 Admin ON");
+    alert("🔥 ADMIN");
   }
 }
 
-// تحميل آخر حلقة
+// تحميل
 function loadLast(){
-  const saved = localStorage.getItem("last_"+currentSeries);
-  if(saved) current = parseInt(saved);
+  const s=localStorage.getItem("last_"+currentSeries);
+  if(s)current=parseInt(s);
 }
+
+renderSeries();
 </script>
 
 </body>
