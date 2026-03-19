@@ -3,146 +3,107 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مشغل مع قائمة حلقات</title>
+<title>مشغل مسلسلات</title>
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
 body {
-  background: #111;
+  background: #0b0b0b;
   color: white;
   font-family: Arial;
   padding: 15px;
 }
 
-.container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-input, button {
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
+video {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 15px;
 }
 
 button {
-  background: #00c853;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #e50914;
   color: white;
   font-weight: bold;
 }
 
-video {
-  width: 100%;
-  margin-top: 15px;
-  border-radius: 10px;
-}
-
 .episodes {
-  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .episode {
-  background: #222;
-  padding: 10px;
-  margin: 5px 0;
+  background: #1a1a1a;
+  padding: 12px;
   border-radius: 8px;
   cursor: pointer;
 }
 
-.episode:hover {
-  background: #333;
+.episode.active {
+  background: #e50914;
 }
 </style>
 </head>
 
 <body>
 
-<h2>🎬 مشغل + حلقات</h2>
-
-<div class="container">
-
-  <!-- رقم الحلقة -->
-  <input type="number" id="episodeNumber" placeholder="رقم الحلقة">
-
-  <!-- رابط الحلقة -->
-  <input type="text" id="episodeLink" placeholder="رابط الحلقة (mp4 أو m3u8)">
-
-  <button onclick="addEpisode()">➕ إضافة الحلقة</button>
-
-</div>
+<h2>🎬 المسلسل</h2>
 
 <video id="videoPlayer" controls></video>
 
-<div class="episodes">
-  <h3>📺 قائمة الحلقات</h3>
-  <div id="episodesList"></div>
-</div>
+<div class="episodes" id="episodesList"></div>
 
 <script>
-let episodes = [];
 let hls;
+let currentIndex = 0;
 
-function addEpisode() {
-  const num = document.getElementById("episodeNumber").value;
-  const link = document.getElementById("episodeLink").value;
-
-  if (!num || !link) {
-    alert("حط رقم الحلقة والرابط");
-    return;
+// 🔥 الحلقة جاهزة من Google Drive
+const episodes = [
+  {
+    number: 1,
+    title: "الحلقة 1",
+    url: "https://drive.google.com/uc?export=download&id=1DTLrVfgL0EKBnMfUpRbMTCgL9Kqih_V_"
   }
+];
 
-  episodes.push({
-    number: parseInt(num),
-    link: link
-  });
-
-  // ترتيب تلقائي
-  episodes.sort((a, b) => a.number - b.number);
-
-  renderEpisodes();
-
-  // تفريغ الحقول
-  document.getElementById("episodeNumber").value = "";
-  document.getElementById("episodeLink").value = "";
-}
-
-function renderEpisodes() {
-  const list = document.getElementById("episodesList");
-  list.innerHTML = "";
-
-  episodes.forEach(ep => {
-    const div = document.createElement("div");
-    div.className = "episode";
-    div.innerText = "الحلقة " + ep.number;
-
-    div.onclick = () => playEpisode(ep.link);
-
-    list.appendChild(div);
-  });
-}
-
-function playEpisode(source) {
+// تشغيل تلقائي
+function playEpisode() {
   const video = document.getElementById("videoPlayer");
+  const source = episodes[currentIndex].url;
 
   if (source.includes(".m3u8")) {
-
-    if (hls) {
-      hls.destroy();
-    }
-
+    if (hls) hls.destroy();
     hls = new Hls();
     hls.loadSource(source);
     hls.attachMedia(video);
-
   } else {
-    if (hls) {
-      hls.destroy();
-    }
+    if (hls) hls.destroy();
     video.src = source;
   }
 }
+
+// عرض الحلقات
+const list = document.getElementById("episodesList");
+
+episodes.forEach((ep, index) => {
+  const div = document.createElement("div");
+  div.className = "episode";
+  div.innerText = ep.title;
+
+  div.onclick = () => {
+    currentIndex = index;
+    playEpisode();
+  };
+
+  list.appendChild(div);
+});
+
+// تشغيل مباشر
+playEpisode();
 </script>
 
 </body>
