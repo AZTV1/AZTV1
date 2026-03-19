@@ -3,276 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JOKER | 4K STREAM</title>
+<title>JOKER</title>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-:root {
-    --primary:#e50914;
-    --green:#32cd32;
-    --purple:#7b2cbf;
-}
+body{margin:0;background:#080808;color:#fff;font-family:'Cairo';}
 
-body {
-    margin:0;
-    background:#080808;
-    color:#fff;
-    font-family:'Cairo',sans-serif;
+/* LOGIN */
+#auth-box{
+position:fixed;inset:0;background:#000;display:flex;
+justify-content:center;align-items:center;z-index:9999;
 }
+#auth-box div{background:#111;padding:40px;border-radius:10px;text-align:center}
 
 /* HEADER */
-header {
-    position:fixed;
-    width:100%;
-    padding:15px 50px;
-    display:flex;
-    align-items:center;
-    background:linear-gradient(to bottom,rgba(0,0,0,0.9),transparent);
-    z-index:999;
+header{
+position:fixed;width:100%;padding:15px 50px;
+display:flex;align-items:center;
+background:linear-gradient(to bottom,#000,transparent);
+z-index:999;
 }
-
-.logo {
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-size:32px;
-    font-weight:bold;
-}
-
-.logo span { color:var(--primary); }
-
-.logo img {
-    width:50px;
-    height:50px;
-    border-radius:50%;
-    border:2px solid var(--green);
-}
-
-.nav-links {
-    margin-right:40px;
-    display:flex;
-    gap:25px;
-}
-
-.nav-links a {
-    color:#ccc;
-    text-decoration:none;
-    transition:.3s;
-}
-
-.nav-links a:hover {
-    color:var(--green);
-}
+.logo{display:flex;align-items:center;gap:10px;font-size:30px;font-weight:bold}
+.logo img{width:45px;height:45px;border-radius:50%}
+.nav{margin-right:40px;display:flex;gap:20px}
 
 /* HERO */
-.hero {
-    height:90vh;
-    background:
-    linear-gradient(to right,#080808 20%,transparent),
-    url('https://images.alphacoders.com/104/1043951.jpg');
-    background-size:cover;
-    display:flex;
-    align-items:center;
-    padding:0 60px;
+.hero{
+height:90vh;
+background:
+linear-gradient(to right,#080808 20%,transparent),
+url('https://wallpapercave.com/wp/wp1812412.jpg');
+background-size:cover;
+display:flex;
+align-items:center;
+padding:0 60px;
 }
+.hero h1{font-size:90px;margin:0}
 
-.hero h1 {
-    font-size:90px;
-    margin:0;
-}
+/* ROW */
+.section{margin:40px 50px 10px;font-size:22px}
+.row{display:flex;overflow-x:auto;gap:10px;padding:20px 50px}
+.row::-webkit-scrollbar{display:none}
 
-.hero p {
-    color:#ccc;
-    font-size:20px;
-    margin-top:10px;
-}
-
-/* SECTIONS */
-.section-title {
-    margin:40px 50px 10px;
-    font-size:22px;
-    border-right:4px solid var(--primary);
-    padding-right:10px;
-}
-
-.row {
-    display:flex;
-    overflow-x:auto;
-    gap:15px;
-    padding:20px 50px;
-}
-
-.row::-webkit-scrollbar { display:none; }
-
-/* MOVIE CARD */
-.card {
-    min-width:200px;
-    height:300px;
-    border-radius:10px;
-    overflow:hidden;
-    position:relative;
-    transition:.4s;
-    cursor:pointer;
-}
-
-.card img, .card video {
-    width:100%;
-    height:100%;
-    object-fit:cover;
-}
-
-.card video { display:none; }
-
-.card:hover {
-    transform:scale(1.15);
-    z-index:10;
-}
-
-.card:hover img { display:none; }
-.card:hover video { display:block; }
-
-.overlay {
-    position:absolute;
-    bottom:0;
-    width:100%;
-    padding:10px;
-    background:linear-gradient(transparent,black);
-}
-
-.badge {
-    background:var(--green);
-    color:#000;
-    font-size:10px;
-    padding:2px 6px;
-    border-radius:3px;
-}
-
-/* BUTTON */
-.add-btn {
-    position:absolute;
-    top:10px;
-    left:10px;
-    background:rgba(0,0,0,0.7);
-    border:none;
-    color:#fff;
-    cursor:pointer;
-    border-radius:50%;
-    width:30px;
-    height:30px;
-}
-
-</style>
-</head>
-
-<body>
-
-<header>
-    <div class="logo">
-        <img src="https://i.pinimg.com/originals/66/32/ab/6632ab2673295963952f41b2725e6834.jpg">
-        JOK<span>ER</span>
-    </div>
-
-    <nav class="nav-links">
-        <a href="#">الرئيسية</a>
-        <a href="#">رعب</a>
-        <a href="#">أكشن</a>
-        <a href="#">رومانسي</a>
-        <a href="#">مسلسلات</a>
-        <a href="#">⭐ قائمتي</a>
-    </nav>
-</header>
-
-<!-- HERO -->
-<div class="hero">
-    <div>
-        <h1>JOKER</h1>
-        <p>عالم الأفلام المظلم... استمتع بأفضل تجربة مشاهدة 🔥</p>
-    </div>
-</div>
-
-<!-- الأقسام -->
-<div class="section-title">🔥 الأعمال المميزة</div>
-<div class="row" id="featured"></div>
-
-<div class="section-title">👻 رعب</div>
-<div class="row" id="horror"></div>
-
-<div class="section-title">💥 أكشن</div>
-<div class="row" id="action"></div>
-
-<div class="section-title">❤️ رومانسي</div>
-<div class="row" id="romance"></div>
-
-<div class="section-title">📺 مسلسلات</div>
-<div class="row" id="series"></div>
-
-<div class="section-title">⭐ قائمتي</div>
-<div class="row" id="mylist"></div>
-
-<script>
-const firebaseConfig = {
-    databaseURL: "https://mymoveis-default-rtdb.firebaseio.com/"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-/* عرض الأفلام */
-db.ref('movies').on('value', snap => {
-
-    document.querySelectorAll('.row').forEach(r => r.innerHTML="");
-
-    snap.forEach(child => {
-        const d = child.val();
-
-        const card = `
-        <div class="card">
-            <button class="add-btn" onclick="addToList('${child.key}')">+</button>
-            <img src="${d.poster}">
-            <video src="${d.url}" controls></video>
-            <div class="overlay">
-                <span class="badge">4K</span>
-                <h4>${d.name}</h4>
-            </div>
-        </div>`;
-
-        document.getElementById('featured').innerHTML += card;
-
-        if(d.type=="رعب") document.getElementById('horror').innerHTML += card;
-        if(d.type=="أكشن") document.getElementById('action').innerHTML += card;
-        if(d.type=="رومانسي") document.getElementById('romance').innerHTML += card;
-        if(d.type=="مسلسل") document.getElementById('series').innerHTML += card;
-    });
-});
-
-/* قائمتي */
-function addToList(id){
-    db.ref('mylist/'+id).set(true);
-}
-
-db.ref('mylist').on('value', snap=>{
-    const cont=document.getElementById('mylist');
-    cont.innerHTML="";
-
-    snap.forEach(item=>{
-        db.ref('movies/'+item.key).once('value',m=>{
-            const d=m.val();
-            cont.innerHTML+=`
-            <div class="card">
-                <img src="${d.poster}">
-                <video src="${d.url}" controls></video>
-                <div class="overlay">
-                    <h4>${d.name}</h4>
-                </div>
-            </div>`;
-        });
-    });
-});
-</script>
-
-</body>
-</html>
+/* CARD */
+.card{
+min-width:220px;height:320px;border-radius:6px;
+overflow:hidden;position:relative;transition:.4s;cursor
