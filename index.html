@@ -3,56 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AZTV1 - مكتبة الأفلام</title>
+    <title>AZTV1 - مكتبة الأفلام الآمنة</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        body { background-color: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; }
-        header { padding: 25px; border-bottom: 2px solid #ff0000; background: #050505; color: #FFD700; font-size: 30px; font-weight: bold; }
-        .add-section { background: #0a0a0a; padding: 20px; margin: 20px auto; max-width: 450px; border: 1px solid #333; border-radius: 12px; }
-        input { width: 85%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #1a1a1a; color: #fff; text-align: center; }
-        .btn-add { background: #ff0000; color: #fff; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 90%; font-size: 16px; }
+        body { background-color: #000; color: #fff; font-family: sans-serif; margin: 0; padding-bottom: 50px; text-align: center; }
+        header { background: #111; padding: 20px; border-bottom: 2px solid #ff0000; color: #FFD700; font-size: 28px; font-weight: bold; }
+        .add-box { background: #0a0a0a; padding: 20px; margin: 20px auto; max-width: 400px; border-radius: 12px; border: 1px solid #333; }
+        input { width: 85%; padding: 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #444; background: #1a1a1a; color: #fff; text-align: center; }
+        .btn-add { background: #ff0000; color: #fff; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 90%; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; }
-        .movie-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 15px; }
-        video { width: 100%; border-radius: 8px; }
+        .movie-card { background: #111; border: 1px solid #222; border-radius: 15px; padding-bottom: 10px; overflow: hidden; position: relative; }
+        video { width: 100%; height: 180px; background: #000; border-bottom: 1px solid #222; }
+        .movie-name { color: #FFD700; font-weight: bold; margin: 10px; font-size: 18px; }
+        .del-btn { background: #1a1a1a; color: #444; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer; font-size: 11px; transition: 0.3s; margin-top: 5px; }
+        .del-btn:hover { color: #ff0000; background: #000; }
     </style>
 </head>
 <body>
-    <header>AZTV1</header>
-    <div class="add-section">
-        <h3 style="color: #ff0000;">إضافة فيلم جديد للمكتبة</h3>
-        <input type="text" id="movieName" placeholder="اسم الفيلم">
-        <input type="text" id="movieUrl" placeholder="رابط الفيديو المباشر">
-        <button class="btn-add" onclick="saveMovie()">إضافة الآن ✅</button>
-    </div>
-    <div class="grid" id="moviesContainer"></div>
-    <script>
-        const firebaseConfig = { databaseURL: "https://mymoveis-default-rtdb.firebaseio.com/" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        function saveMovie() {
-            const name = document.getElementById('movieName').value;
-            const url = document.getElementById('movieUrl').value;
-            if (name && url) {
-                db.ref('movies').push({ name: name, url: url }).then(() => {
-                    alert("تم الحفظ بنجاح!");
-                    document.getElementById('movieName').value = "";
-                    document.getElementById('movieUrl').value = "";
-                });
-            }
+
+<header>📺 AZTV1 - كلمة السر مفعلة</header>
+
+<div class="add-box">
+    <input type="text" id="mName" placeholder="اسم الفيلم">
+    <input type="text" id="mUrl" placeholder="رابط الفيديو المباشر">
+    <button class="btn-add" onclick="addMovie()">إضافة للمكتبة ✅</button>
+</div>
+
+<div class="grid" id="container"></div>
+
+<script>
+    // إعدادات Firebase الخاصة بك
+    const firebaseConfig = { databaseURL: "https://mymoveis-default-rtdb.firebaseio.com/" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // كلمة السر التي طلبتها
+    const MY_PASSWORD = "2030"; 
+
+    function addMovie() {
+        const name = document.getElementById('mName').value;
+        const url = document.getElementById('mUrl').value;
+        if (name && url) {
+            db.ref('movies').push({ name: name, url: url });
+            document.getElementById('mName').value = "";
+            document.getElementById('mUrl').value = "";
         }
-        db.ref('movies').on('value', (snap) => {
-            const container = document.getElementById('moviesContainer');
-            container.innerHTML = ""; 
-            snap.forEach((child) => {
-                const data = child.val();
-                container.innerHTML += `
-                    <div class="movie-card">
-                        <p style="color:#FFD700; font-weight:bold;">${data.name}</p>
-                        <video controls src="${data.url}"></video>
-                    </div>`;
-            });
+    }
+
+    function removeMovie(id) {
+        const pass = prompt("الرجاء إدخال رمز الحماية (كلمة السر) للحذف:");
+        if (pass === MY_PASSWORD) {
+            db.ref('movies').child(id).remove();
+            alert("تم الحذف بنجاح ✅");
+        } else {
+            alert("⚠️ عذراً، كلمة السر غير صحيحة. لا يمكنك الحذف!");
+        }
+    }
+
+    db.ref('movies').on('value', (snapshot) => {
+        const container = document.getElementById('container');
+        container.innerHTML = "";
+        snapshot.forEach((child) => {
+            const data = child.val();
+            container.innerHTML += `
+                <div class="movie-card">
+                    <video controls><source src="${data.url}" type="video/mp4"></video>
+                    <p class="movie-name">${data.name}</p>
+                    <button class="del-btn" onclick="removeMovie('${child.key}')">حذف 🗑️</button>
+                </div>`;
         });
-    </script>
+    });
+</script>
+
 </body>
 </html>
