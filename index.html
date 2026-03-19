@@ -3,78 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AZTV1 - مكتبة الأفلام الآمنة</title>
+    <title>JOKER - 4K STREAM</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        body { background-color: #000; color: #fff; font-family: sans-serif; margin: 0; padding-bottom: 50px; text-align: center; }
-        header { background: #111; padding: 20px; border-bottom: 2px solid #ff0000; color: #FFD700; font-size: 28px; font-weight: bold; }
-        .add-box { background: #0a0a0a; padding: 20px; margin: 20px auto; max-width: 400px; border-radius: 12px; border: 1px solid #333; }
-        input { width: 85%; padding: 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #444; background: #1a1a1a; color: #fff; text-align: center; }
-        .btn-add { background: #ff0000; color: #fff; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 90%; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; }
-        .movie-card { background: #111; border: 1px solid #222; border-radius: 15px; padding-bottom: 10px; overflow: hidden; position: relative; }
-        video { width: 100%; height: 180px; background: #000; border-bottom: 1px solid #222; }
-        .movie-name { color: #FFD700; font-weight: bold; margin: 10px; font-size: 18px; }
-        .del-btn { background: #1a1a1a; color: #444; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer; font-size: 11px; transition: 0.3s; margin-top: 5px; }
-        .del-btn:hover { color: #ff0000; background: #000; }
+        :root { --main-color: #7b2cbf; --accent-color: #32cd32; } /* ألوان الجوكر: بنفسجي وأخضر */
+        body { background-color: #050505; color: #fff; font-family: 'Cairo', sans-serif; margin: 0; text-align: center; }
+        
+        /* شاشة القفل */
+        #lock-screen { position: fixed; inset: 0; background: #000; display: flex; justify-content: center; align-items: center; z-index: 10000; }
+        .lock-box { background: #111; padding: 40px; border-radius: 20px; border: 2px solid var(--main-color); }
+
+        /* الهيدر الجديد */
+        header { background: #000; padding: 15px; border-bottom: 2px solid var(--main-color); display: flex; align-items: center; justify-content: space-between; px: 20px; }
+        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .logo-img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color); }
+        .nav-links { display: flex; gap: 15px; margin-right: 20px; }
+        .nav-links a { color: #ccc; text-decoration: none; font-weight: bold; font-size: 14px; transition: 0.3s; }
+        .nav-links a:hover { color: var(--accent-color); }
+
+        /* منطقة الإضافة */
+        .add-box { background: #111; padding: 20px; margin: 20px auto; max-width: 600px; border-radius: 15px; border: 1px solid #333; }
+        input, select { width: 90%; padding: 10px; margin: 5px; border-radius: 8px; border: 1px solid #444; background: #000; color: #fff; }
+        .btn-joker { background: var(--main-color); color: #fff; padding: 10px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+
+        /* الشبكة */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; padding: 20px; }
+        .card { background: #111; border-radius: 15px; overflow: hidden; border: 1px solid #222; transition: 0.5s; position: relative; }
+        .card:hover { border-color: var(--accent-color); transform: translateY(-10px); }
+        .card img { width: 100%; height: 350px; object-fit: cover; }
+        .card-content { padding: 15px; background: linear-gradient(to top, #000, transparent); }
+        
+        video { width: 100%; border-bottom: 1px solid #333; }
+        .badge { background: var(--accent-color); color: #000; padding: 2px 8px; border-radius: 5px; font-size: 12px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<header>📺 AZTV1 - كلمة السر مفعلة</header>
-
-<div class="add-box">
-    <input type="text" id="mName" placeholder="اسم الفيلم">
-    <input type="text" id="mUrl" placeholder="رابط الفيديو المباشر">
-    <button class="btn-add" onclick="addMovie()">إضافة للمكتبة ✅</button>
+<div id="lock-screen">
+    <div class="lock-box">
+        <img src="https://i.pinimg.com/originals/66/32/ab/6632ab2673295963952f41b2725e6834.jpg" width="100" style="border-radius:50%">
+        <h2 style="color:var(--main-color)">JOKER SYSTEM</h2>
+        <input type="password" id="pass" placeholder="Password">
+        <button class="btn-joker" onclick="login()">Enter</button>
+    </div>
 </div>
 
-<div class="grid" id="container"></div>
+<div id="content" style="display:none">
+    <header>
+        <div class="logo-area">
+            <img src="https://i.pinimg.com/originals/66/32/ab/6632ab2673295963952f41b2725e6834.jpg" class="logo-img">
+            <span style="font-size:24px; color:var(--main-color); font-weight:bold;">JOKER</span>
+        </div>
+        <nav class="nav-links">
+            <a href="#">رعب</a>
+            <a href="#">أكشن</a>
+            <a href="#">رومانسي</a>
+            <a href="#">مسلسلات</a>
+        </nav>
+    </header>
+
+    <div class="add-box">
+        <input type="text" id="mName" placeholder="اكتب اسم الفيلم بدقة (بالإنجليزي أفضل للجلب)">
+        <input type="text" id="mUrl" placeholder="رابط الفيديو المباشر">
+        <select id="mType">
+            <option value="رعب">رعب</option>
+            <option value="أكشن">أكشن</option>
+            <option value="رومانسي">رومانسي</option>
+            <option value="مسلسل">مسلسل</option>
+        </select>
+        <button class="btn-joker" onclick="addMovie()">إضافة بتقنية JOKER 🃏</button>
+    </div>
+
+    <div class="grid" id="container"></div>
+</div>
 
 <script>
-    // إعدادات Firebase الخاصة بك
     const firebaseConfig = { databaseURL: "https://mymoveis-default-rtdb.firebaseio.com/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const API_KEY = "89736868843236315513220579e72877"; // مفتاح تجريبي لجلب البيانات
 
-    // كلمة السر التي طلبتها
-    const MY_PASSWORD = "2030"; 
+    function login() {
+        if(document.getElementById('pass').value === "2030") {
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        }
+    }
 
-    function addMovie() {
+    async function addMovie() {
         const name = document.getElementById('mName').value;
         const url = document.getElementById('mUrl').value;
+        const type = document.getElementById('mType').value;
+
         if (name && url) {
-            db.ref('movies').push({ name: name, url: url });
-            document.getElementById('mName').value = "";
-            document.getElementById('mUrl').value = "";
+            // جلب البيانات من TMDB
+            const response = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${name}`);
+            const data = await response.json();
+            const info = data.results[0] || {};
+            
+            db.ref('movies').push({
+                name: name,
+                url: url,
+                type: type,
+                poster: info.poster_path ? `https://image.tmdb.org/t/p/w500${info.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster',
+                desc: info.overview || 'لا يوجد وصف متاح.'
+            });
         }
     }
 
-    function removeMovie(id) {
-        const pass = prompt("الرجاء إدخال رمز الحماية (كلمة السر) للحذف:");
-        if (pass === MY_PASSWORD) {
-            db.ref('movies').child(id).remove();
-            alert("تم الحذف بنجاح ✅");
-        } else {
-            alert("⚠️ عذراً، كلمة السر غير صحيحة. لا يمكنك الحذف!");
-        }
+    function deleteM(id) {
+        if(prompt("كلمة السر للحذف") === "2030") db.ref('movies').child(id).remove();
     }
 
-    db.ref('movies').on('value', (snapshot) => {
-        const container = document.getElementById('container');
-        container.innerHTML = "";
-        snapshot.forEach((child) => {
-            const data = child.val();
-            container.innerHTML += `
-                <div class="movie-card">
-                    <video controls><source src="${data.url}" type="video/mp4"></video>
-                    <p class="movie-name">${data.name}</p>
-                    <button class="del-btn" onclick="removeMovie('${child.key}')">حذف 🗑️</button>
+    db.ref('movies').on('value', (snap) => {
+        const cont = document.getElementById('container');
+        cont.innerHTML = "";
+        snap.forEach((child) => {
+            const d = child.val();
+            cont.innerHTML += `
+                <div class="card">
+                    <video controls poster="${d.poster}"><source src="${d.url}" type="video/mp4"></video>
+                    <div class="card-content">
+                        <span class="badge">${d.type}</span>
+                        <p class="movie-name">${d.name}</p>
+                        <p style="font-size:10px; color:#888;">${d.desc.substring(0, 100)}...</p>
+                        <button class="del-btn" onclick="deleteM('${child.key}')" style="color:red; background:none; border:none; cursor:pointer;">حذف 🗑️</button>
+                    </div>
                 </div>`;
         });
     });
 </script>
-
 </body>
 </html>
