@@ -1,196 +1,148 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>NETFLIX+</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مشغل مع قائمة حلقات</title>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
-body{margin:0;background:#000;color:#fff;font-family:'Cairo'}
-
-header{
-padding:20px;
-font-size:32px;
-color:#e50914;
-font-weight:bold;
+body {
+  background: #111;
+  color: white;
+  font-family: Arial;
+  padding: 15px;
 }
 
-.row{display:flex;gap:12px;overflow-x:auto;padding:20px}
-.card{min-width:200px;height:300px;cursor:pointer}
-.card img{width:100%;height:100%;object-fit:cover;border-radius:6px}
-
-#admin{
-position:fixed;
-bottom:0;
-width:100%;
-background:#111;
-padding:10px;
-display:flex;
-gap:10px;
-flex-wrap:wrap;
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-input,select{
-padding:8px;
-border:none;
-border-radius:5px;
+input, button {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
 }
 
-button{
-padding:8px 15px;
-background:#e50914;
-color:#fff;
-border:none;
-cursor:pointer;
+button {
+  background: #00c853;
+  color: white;
+  font-weight: bold;
+}
+
+video {
+  width: 100%;
+  margin-top: 15px;
+  border-radius: 10px;
+}
+
+.episodes {
+  margin-top: 20px;
+}
+
+.episode {
+  background: #222;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.episode:hover {
+  background: #333;
 }
 </style>
 </head>
 
 <body>
 
-<header>NETFLIX+</header>
+<h2>🎬 مشغل + حلقات</h2>
 
-<div class="row" id="movies"></div>
+<div class="container">
 
-<!-- ADMIN -->
-<div id="admin">
-<input id="name" placeholder="اسم الفيلم">
-<input id="url" placeholder="رابط Google Drive أو mp4">
-<select id="type">
-<option value="movie">فيلم</option>
-<option value="tv">مسلسل</option>
-</select>
-<button onclick="addMovie()">إضافة</button>
+  <!-- رقم الحلقة -->
+  <input type="number" id="episodeNumber" placeholder="رقم الحلقة">
+
+  <!-- رابط الحلقة -->
+  <input type="text" id="episodeLink" placeholder="رابط الحلقة (mp4 أو m3u8)">
+
+  <button onclick="addEpisode()">➕ إضافة الحلقة</button>
+
+</div>
+
+<video id="videoPlayer" controls></video>
+
+<div class="episodes">
+  <h3>📺 قائمة الحلقات</h3>
+  <div id="episodesList"></div>
 </div>
 
 <script>
+let episodes = [];
+let hls;
 
-/* Firebase */
-const firebaseConfig = {
-  apiKey: "AIzaSyArRrIq2iTS3deGSaFgX70k1ZB98wKvLbs",
-  authDomain: "mymoveis.firebaseapp.com",
-  databaseURL: "https://mymoveis-default-rtdb.firebaseio.com",
-  projectId: "mymoveis"
-};
+function addEpisode() {
+  const num = document.getElementById("episodeNumber").value;
+  const link = document.getElementById("episodeLink").value;
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+  if (!num || !link) {
+    alert("حط رقم الحلقة والرابط");
+    return;
+  }
 
-/* TMDB */
-const API_KEY = "dde3081de76eb8146bcd702921acd3e4";
+  episodes.push({
+    number: parseInt(num),
+    link: link
+  });
 
-/* تحويل Google Drive */
-function getDriveId(url){
-if(url.includes("/d/")) return url.split("/d/")[1].split("/")[0];
-if(url.includes("id=")) return url.split("id=")[1];
-return null;
+  // ترتيب تلقائي
+  episodes.sort((a, b) => a.number - b.number);
+
+  renderEpisodes();
+
+  // تفريغ الحقول
+  document.getElementById("episodeNumber").value = "";
+  document.getElementById("episodeLink").value = "";
 }
 
-/* إضافة */
-async function addMovie(){
+function renderEpisodes() {
+  const list = document.getElementById("episodesList");
+  list.innerHTML = "";
 
-let name = document.getElementById("name").value;
-let url = document.getElementById("url").value;
+  episodes.forEach(ep => {
+    const div = document.createElement("div");
+    div.className = "episode";
+    div.innerText = "الحلقة " + ep.number;
 
-if(!name || !url){
-alert("اكتب الاسم والرابط");
-return;
+    div.onclick = () => playEpisode(ep.link);
+
+    list.appendChild(div);
+  });
 }
 
-/* TMDB */
-let movieData = {
-name: name,
-poster: "",
-story: "لا يوجد وصف",
-rating: "0"
-};
+function playEpisode(source) {
+  const video = document.getElementById("videoPlayer");
 
-try{
-const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${name}&language=ar-SA`);
-const data = await res.json();
-if(data.results[0]){
-movieData = {
-name: data.results[0].title,
-poster: "https://image.tmdb.org/t/p/w500"+data.results[0].poster_path,
-story: data.results[0].overview,
-rating: data.results[0].vote_average
-};
+  if (source.includes(".m3u8")) {
+
+    if (hls) {
+      hls.destroy();
+    }
+
+    hls = new Hls();
+    hls.loadSource(source);
+    hls.attachMedia(video);
+
+  } else {
+    if (hls) {
+      hls.destroy();
+    }
+    video.src = source;
+  }
 }
-}catch(e){}
-
-/* حفظ */
-db.ref("movies").push({
-...movieData,
-url:url
-});
-
-alert("تمت الإضافة 🔥");
-}
-
-/* عرض */
-db.ref("movies").on("value", snap=>{
-
-const cont = document.getElementById("movies");
-cont.innerHTML="";
-
-snap.forEach(child=>{
-let m = child.val();
-
-cont.innerHTML+=`
-<div class="card" onclick='play(${JSON.stringify(m)})'>
-<img src="${m.poster}">
-</div>`;
-});
-
-});
-
-/* تشغيل */
-function play(m){
-
-let html = "";
-
-/* Google Drive */
-if(m.url.includes("drive.google.com")){
-let id = getDriveId(m.url);
-
-html = `
-<iframe width="100%" height="400"
-src="https://drive.google.com/file/d/${id}/preview"
-allowfullscreen>
-</iframe>
-
-<br>
-<a href="https://drive.google.com/uc?export=download&id=${id}">
-تشغيل بديل
-</a>
-`;
-}
-
-/* mp4 */
-else{
-html = `
-<video controls width="100%">
-<source src="${m.url}">
-</video>
-`;
-}
-
-document.body.innerHTML = `
-<h2>${m.name}</h2>
-<p>${m.story}</p>
-<p>⭐ ${m.rating}</p>
-
-${html}
-
-<br><br>
-<button onclick="location.reload()">رجوع</button>
-`;
-}
-
 </script>
 
 </body>
