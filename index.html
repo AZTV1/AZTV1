@@ -2,7 +2,6 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JOKER</title>
 
 <!-- Firebase -->
@@ -12,47 +11,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
 
 <style>
-body{
-margin:0;
-background:#000;
-color:#fff;
-font-family:'Cairo';
-}
+body{margin:0;background:#000;color:#fff;font-family:'Cairo'}
 
-/* HEADER */
-header{
-padding:15px 50px;
-font-size:28px;
-font-weight:bold;
-}
+header{padding:15px 50px;font-size:28px;font-weight:bold}
 
-/* ROW */
-.row{
-display:flex;
-gap:10px;
-overflow-x:auto;
-padding:20px;
-}
+.row{display:flex;gap:10px;overflow-x:auto;padding:20px}
 .row::-webkit-scrollbar{display:none}
 
-/* CARD */
-.card{
-min-width:200px;
-height:300px;
-cursor:pointer;
-transition:.3s;
-}
-.card img{
-width:100%;
-height:100%;
-object-fit:cover;
-border-radius:5px;
-}
-.card:hover{
-transform:scale(1.1);
-}
+.card{min-width:200px;height:300px;cursor:pointer;transition:.3s}
+.card img{width:100%;height:100%;object-fit:cover;border-radius:6px}
+.card:hover{transform:scale(1.1)}
 
-/* ADMIN */
 #admin{
 position:fixed;
 bottom:0;
@@ -63,16 +32,8 @@ display:flex;
 gap:10px;
 }
 
-input,select{
-padding:8px;
-border:none;
-border-radius:5px;
-}
-button{
-padding:8px 15px;
-cursor:pointer;
-}
-
+input,select{padding:8px;border:none;border-radius:5px}
+button{padding:8px 15px;cursor:pointer}
 </style>
 </head>
 
@@ -85,7 +46,7 @@ cursor:pointer;
 <!-- ADMIN -->
 <div id="admin">
 <input id="name" placeholder="اسم الفيلم">
-<input id="url" placeholder="رابط التشغيل">
+<input id="url" placeholder="رابط Google Drive">
 <select id="type">
 <option value="movie">فيلم</option>
 <option value="tv">مسلسل</option>
@@ -100,11 +61,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyArRrIq2iTS3deGSaFgX70k1ZB98wKvLbs",
   authDomain: "mymoveis.firebaseapp.com",
   databaseURL: "https://mymoveis-default-rtdb.firebaseio.com",
-  projectId: "mymoveis",
-  storageBucket: "mymoveis.firebasestorage.app",
-  messagingSenderId: "771499622971",
-  appId: "1:771499622971:web:152e5a9acea54407be121e",
-  measurementId: "G-180RE7CGD1"
+  projectId: "mymoveis"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -113,7 +70,16 @@ const db = firebase.database();
 /* 🔑 TMDB */
 const API_KEY = "dde3081de76eb8146bcd702921acd3e4";
 
-/* ➕ إضافة فيلم */
+/* تحويل رابط Google Drive */
+function convertDrive(url){
+if(url.includes("drive.google.com")){
+let id = url.split("/d/")[1].split("/")[0];
+return "https://drive.google.com/file/d/"+id+"/preview";
+}
+return url;
+}
+
+/* ➕ إضافة */
 async function addMovie(){
 
 let name = document.getElementById("name").value;
@@ -125,29 +91,27 @@ alert("اكتب الاسم والرابط");
 return;
 }
 
+/* تحويل الرابط */
+url = convertDrive(url);
+
+/* TMDB */
 const res = await fetch(`https://api.themoviedb.org/3/search/${type}?api_key=${API_KEY}&query=${name}&language=ar-SA`);
 const data = await res.json();
 
-const m = data.results[0];
-
-const vid = await fetch(`https://api.themoviedb.org/3/${type}/${m.id}/videos?api_key=${API_KEY}`);
-const vd = await vid.json();
-
-const trailer = vd.results.find(v=>v.type==="Trailer");
+const m = data.results[0] || {};
 
 db.ref("movies").push({
-name: m.title || m.name,
-poster: "https://image.tmdb.org/t/p/w500"+m.poster_path,
-story: m.overview,
-rating: m.vote_average,
-url: url,
-trailer: trailer?.key || ""
+name: m.title || m.name || name,
+poster: m.poster_path ? "https://image.tmdb.org/t/p/w500"+m.poster_path : "",
+story: m.overview || "لا يوجد وصف",
+rating: m.vote_average || "0",
+url: url
 });
 
 alert("تمت الإضافة 🔥");
 }
 
-/* 📺 عرض الأفلام */
+/* 📺 عرض */
 db.ref("movies").on("value", snap=>{
 
 const cont = document.getElementById("movies");
@@ -172,11 +136,7 @@ document.body.innerHTML = `
 <p style="padding:20px">${m.story}</p>
 <p style="padding:20px">⭐ ${m.rating}</p>
 
-<video controls width="100%" src="${m.url}"></video>
-
-<iframe width="100%" height="300"
-src="https://www.youtube.com/embed/${m.trailer}">
-</iframe>
+<iframe width="100%" height="400" src="${m.url}" allowfullscreen></iframe>
 
 <br><br>
 <button onclick="location.reload()">رجوع</button>
