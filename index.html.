@@ -4,25 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AZTV1 - مكتبة الأفلام</title>
-    <!-- ربط مكتبة Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
-        body { background-color: #000; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; text-align: center; }
-        header { padding: 30px; border-bottom: 3px solid #ff0000; background: linear-gradient(to bottom, #111, #000); }
-        .logo { color: #FFD700; font-size: 40px; font-weight: bold; letter-spacing: 5px; text-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+        body { background-color: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; }
+        header { padding: 30px; border-bottom: 3px solid #ff0000; background: #050505; }
+        .logo { color: #FFD700; font-size: 40px; font-weight: bold; letter-spacing: 5px; }
         
-        .add-section { background: #0a0a0a; padding: 25px; margin: 20px auto; max-width: 500px; border: 1px solid #333; border-radius: 15px; box-shadow: 0 0 20px rgba(255,0,0,0.1); }
+        .add-section { background: #0a0a0a; padding: 25px; margin: 20px auto; max-width: 500px; border: 1px solid #333; border-radius: 15px; }
         input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #1a1a1a; color: #fff; text-align: center; }
-        .btn-add { background: #ff0000; color: #fff; padding: 12px 40px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
-        .btn-add:hover { background: #cc0000; transform: scale(1.05); }
+        .btn-add { background: #ff0000; color: #fff; padding: 12px 40px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; padding: 30px; }
-        .movie-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 15px; transition: 0.3s; }
-        .movie-card:hover { border-color: #FFD700; }
-        .movie-card p { color: #FFD700; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
-        video { width: 100%; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .movie-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 15px; }
+        .movie-card p { color: #FFD700; font-size: 18px; font-weight: bold; }
+        video { width: 100%; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -30,11 +27,50 @@
 <header><div class="logo">AZTV1</div></header>
 
 <div class="add-section">
-    <h3 style="color: #ff0000;">إضافة فيلم جديد للمكتبة</h3>
-    <input type="text" id="movieName" placeholder="اكتب اسم الفيلم هنا">
-    <input type="text" id="movieUrl" placeholder="ضع رابط الفيديو المباشر هنا">
+    <h3 style="color: #ff0000;">إضافة فيلم للمكتبة</h3>
+    <input type="text" id="movieName" placeholder="اكتب اسم الفيلم">
+    <input type="text" id="movieUrl" placeholder="ضع رابط الفيديو المباشر">
     <br>
-    <button class="btn-add" onclick="saveToCloud()">إضافة الآن 🎬</button>
+    <button class="btn-add" onclick="saveToCloud()">إضافة الآن ✅</button>
 </div>
 
-<h2 style="color: #FFD700; border-bottom: 1px solid #222; display: inline-block; padding
+<div class="grid" id="moviesContainer"></div>
+
+<script>
+    // ربط قاعدة بياناتك (من الصورة التي صورتها سابقاً)
+    const firebaseConfig = {
+        databaseURL: "https://mymoveis-default-rtdb.firebaseio.com/" 
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function saveToCloud() {
+        const name = document.getElementById('movieName').value;
+        const url = document.getElementById('movieUrl').value;
+
+        if (name && url) {
+            db.ref('movies').push({ name: name, url: url }).then(() => {
+                alert("تمت الإضافة!");
+                document.getElementById('movieName').value = "";
+                document.getElementById('movieUrl').value = "";
+            });
+        }
+    }
+
+    db.ref('movies').on('value', (snapshot) => {
+        const container = document.getElementById('moviesContainer');
+        container.innerHTML = ""; 
+        snapshot.forEach((child) => {
+            const data = child.val();
+            container.innerHTML += `
+                <div class="movie-card">
+                    <p>${data.name}</p>
+                    <video controls src="${data.url}"></video>
+                </div>`;
+        });
+    });
+</script>
+
+</body>
+</html>
