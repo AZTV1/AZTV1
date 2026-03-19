@@ -14,14 +14,14 @@ body{margin:0;background:#000;color:#fff;font-family:'Cairo'}
 
 header{
 padding:20px;
-font-size:35px;
+font-size:32px;
 color:#e50914;
 font-weight:bold;
 }
 
-.row{display:flex;gap:10px;overflow-x:auto;padding:20px}
+.row{display:flex;gap:12px;overflow-x:auto;padding:20px}
 .card{min-width:200px;height:300px;cursor:pointer}
-.card img{width:100%;height:100%;object-fit:cover}
+.card img{width:100%;height:100%;object-fit:cover;border-radius:6px}
 
 #admin{
 position:fixed;
@@ -34,9 +34,19 @@ gap:10px;
 flex-wrap:wrap;
 }
 
-input,select{padding:8px;border:none;border-radius:5px}
-button{padding:8px 15px;cursor:pointer;background:#e50914;color:#fff;border:none}
+input,select{
+padding:8px;
+border:none;
+border-radius:5px;
+}
 
+button{
+padding:8px 15px;
+background:#e50914;
+color:#fff;
+border:none;
+cursor:pointer;
+}
 </style>
 </head>
 
@@ -49,8 +59,7 @@ button{padding:8px 15px;cursor:pointer;background:#e50914;color:#fff;border:none
 <!-- ADMIN -->
 <div id="admin">
 <input id="name" placeholder="اسم الفيلم">
-<input id="url" placeholder="رابط (اختياري)">
-<input type="file" id="file">
+<input id="url" placeholder="رابط Google Drive أو mp4">
 <select id="type">
 <option value="movie">فيلم</option>
 <option value="tv">مسلسل</option>
@@ -75,12 +84,10 @@ const db = firebase.database();
 const API_KEY = "dde3081de76eb8146bcd702921acd3e4";
 
 /* تحويل Google Drive */
-function convertDrive(url){
-if(url.includes("drive.google.com")){
-let id = url.split("/d/")[1]?.split("/")[0] || url.split("id=")[1];
-return "https://drive.google.com/uc?export=download&id="+id;
-}
-return url;
+function getDriveId(url){
+if(url.includes("/d/")) return url.split("/d/")[1].split("/")[0];
+if(url.includes("id=")) return url.split("id=")[1];
+return null;
 }
 
 /* إضافة */
@@ -88,48 +95,40 @@ async function addMovie(){
 
 let name = document.getElementById("name").value;
 let url = document.getElementById("url").value;
-let file = document.getElementById("file").files[0];
-let type = document.getElementById("type").value;
 
-if(!name){
-alert("اكتب الاسم");
+if(!name || !url){
+alert("اكتب الاسم والرابط");
 return;
 }
 
-/* رفع من الجهاز */
-if(file){
-let reader = new FileReader();
-reader.onload = function(e){
-saveMovie(name, e.target.result);
+/* TMDB */
+let movieData = {
+name: name,
+poster: "",
+story: "لا يوجد وصف",
+rating: "0"
 };
-reader.readAsDataURL(file);
-return;
-}
 
-/* رابط */
-if(url){
-url = convertDrive(url);
-saveMovie(name, url);
-}
-
-}
-
-/* حفظ */
-async function saveMovie(name, url){
-
+try{
 const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${name}&language=ar-SA`);
 const data = await res.json();
+if(data.results[0]){
+movieData = {
+name: data.results[0].title,
+poster: "https://image.tmdb.org/t/p/w500"+data.results[0].poster_path,
+story: data.results[0].overview,
+rating: data.results[0].vote_average
+};
+}
+}catch(e){}
 
-let m = data.results[0];
-
+/* حفظ */
 db.ref("movies").push({
-name: m?.title || name,
-poster: m?.poster_path ? "https://image.tmdb.org/t/p/w500"+m.poster_path : "",
-story: m?.overview || "لا يوجد وصف",
-rating: m?.vote_average || "0",
-url: url
+...movieData,
+url:url
 });
 
+alert("تمت الإضافة 🔥");
 }
 
 /* عرض */
@@ -152,29 +151,45 @@ cont.innerHTML+=`
 /* تشغيل */
 function play(m){
 
-let isDrive = m.url.includes("drive");
+let html = "";
 
-document.body.innerHTML=`
-<h2>${m.name}</h2>
-<p>${m.story}</p>
+/* Google Drive */
+if(m.url.includes("drive.google.com")){
+let id = getDriveId(m.url);
 
-${isDrive 
-? `<video controls width="100%" src="${m.url}"></video>` 
-: `<video controls width="100%" src="${m.url}"></video>`}
+html = `
+<iframe width="100%" height="400"
+src="https://drive.google.com/file/d/${id}/preview"
+allowfullscreen>
+</iframe>
 
 <br>
-<a href="${m.url}" download>تحميل الفيلم</a>
+<a href="https://drive.google.com/uc?export=download&id=${id}">
+تشغيل بديل
+</a>
+`;
+}
+
+/* mp4 */
+else{
+html = `
+<video controls width="100%">
+<source src="${m.url}">
+</video>
+`;
+}
+
+document.body.innerHTML = `
+<h2>${m.name}</h2>
+<p>${m.story}</p>
+<p>⭐ ${m.rating}</p>
+
+${html}
 
 <br><br>
 <button onclick="location.reload()">رجوع</button>
 `;
-
 }
-
-/* تحديث تلقائي للتلفاز */
-setInterval(()=>{
-location.reload();
-},60000);
 
 </script>
 
