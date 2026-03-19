@@ -1,8 +1,94 @@
-const firebaseConfig = {
-  apiKey: "AIzaSyArRrIq2iTS3deGSaFgX70k1ZB98wKvLbs",
-  authDomain: "mymoveis.firebaseapp.com",
-  projectId: "mymoveis",
-  storageBucket: "mymoveis.firebasestorage.app",
-  messagingSenderId: "771499622971",
-  appId: "1:771499622971:web:152e5a9acea54407be121e",
-  measurementId: "G-180RE7CGD1"
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AZTV1 - سحابة الأفلام</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { background-color: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; }
+        header { padding: 20px; border-bottom: 3px solid #ff0000; background: #050505; }
+        .logo { color: #FFD700; font-size: 35px; font-weight: bold; letter-spacing: 3px; }
+        .upload-card { background: #0a0a0a; padding: 30px; margin: 20px; border: 2px dashed #ff0000; border-radius: 15px; }
+        .btn-red { background: #ff0000; color: white; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-weight: bold; display: inline-block; border: none; }
+        #progress-container { width: 90%; background: #222; height: 10px; border-radius: 10px; margin: 20px auto; display: none; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background: #FFD700; transition: 0.3s; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 20px; }
+        .movie-card { background: #111; border: 1px solid #333; border-radius: 10px; padding: 10px; }
+        video { width: 100%; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+<header><div class="logo">AZTV1</div></header>
+
+<div class="upload-card">
+    <h2 style="color: #ff0000;">ارفع أفلامك هنا</h2>
+    <label for="fileItem" class="btn-red">🎬 اختـر الفيلم للرفـع</label>
+    <input type="file" id="fileItem" accept="video/*" style="display:none;">
+    <div id="progress-container"><div id="progress-bar"></div></div>
+    <p id="status" style="margin-top: 15px; color: #FFD700;"></p>
+</div>
+
+<div class="grid" id="moviesList"></div>
+
+<script>
+    // هذه هي بياناتك التي في الصورة
+    const firebaseConfig = {
+        apiKey: "AIzaSyArRrIq2iTS3deGSaFgX70k1ZB98wKv-f0",
+        authDomain: "mymoveis.firebaseapp.com",
+        projectId: "mymoveis",
+        storageBucket: "mymoveis.firebasestorage.app",
+        messagingSenderId: "771499622971",
+        appId: "1:771499622971:web:152e5a9acea54407be3541",
+        measurementId: "G-180RE7CGD1"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const storage = firebase.storage();
+    const database = firebase.database();
+
+    const fileInput = document.getElementById('fileItem');
+    const status = document.getElementById('status');
+    const progressBar = document.getElementById('progress-bar');
+    const progressContainer = document.getElementById('progress-container');
+
+    fileInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+
+        progressContainer.style.display = 'block';
+        const storageRef = storage.ref('movies/' + file.name);
+        const uploadTask = storageRef.put(file);
+
+        uploadTask.on('state_changed', 
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                progressBar.style.width = progress + "%";
+                status.innerText = "جاري الرفع: " + Math.round(progress) + "%";
+            }, 
+            (error) => { status.innerText = "خطأ: تأكد من تفعيل Storage Rules"; console.error(error); }, 
+            () => {
+                uploadTask.snapshot.ref.getDownloadURL().then((url) => {
+                    database.ref('list').push({ name: file.name, url: url });
+                    status.innerText = "✅ تم الرفع بنجاح!";
+                    setTimeout(() => { location.reload(); }, 2000);
+                });
+            }
+        );
+    };
+
+    database.ref('list').on('value', (snapshot) => {
+        const list = document.getElementById('moviesList');
+        list.innerHTML = "";
+        snapshot.forEach((child) => {
+            const m = child.val();
+            list.innerHTML += `<div class="movie-card"><p style="color:#FFD700">${m.name}</p><video controls src="${m.url}"></video></div>`;
+        });
+    });
+</script>
+
+</body>
+</html>
