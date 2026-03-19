@@ -5,53 +5,149 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JOKER</title>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
-body{margin:0;background:#080808;color:#fff;font-family:'Cairo';}
+body{margin:0;background:#080808;color:#fff;font-family:'Cairo'}
 
-/* LOGIN */
-#auth-box{
-position:fixed;inset:0;background:#000;display:flex;
-justify-content:center;align-items:center;z-index:9999;
-}
-#auth-box div{background:#111;padding:40px;border-radius:10px;text-align:center}
-
-/* HEADER */
 header{
 position:fixed;width:100%;padding:15px 50px;
 display:flex;align-items:center;
 background:linear-gradient(to bottom,#000,transparent);
 z-index:999;
 }
-.logo{display:flex;align-items:center;gap:10px;font-size:30px;font-weight:bold}
+.logo{display:flex;align-items:center;gap:10px;font-size:28px;font-weight:bold}
 .logo img{width:45px;height:45px;border-radius:50%}
-.nav{margin-right:40px;display:flex;gap:20px}
+.nav{margin-right:40px;display:flex;gap:20px;color:#ccc}
 
-/* HERO */
 .hero{
 height:90vh;
 background:
 linear-gradient(to right,#080808 20%,transparent),
 url('https://wallpapercave.com/wp/wp1812412.jpg');
 background-size:cover;
-display:flex;
-align-items:center;
-padding:0 60px;
+display:flex;align-items:center;padding:0 60px;
 }
 .hero h1{font-size:90px;margin:0}
 
-/* ROW */
 .section{margin:40px 50px 10px;font-size:22px}
 .row{display:flex;overflow-x:auto;gap:10px;padding:20px 50px}
 .row::-webkit-scrollbar{display:none}
 
-/* CARD */
 .card{
 min-width:220px;height:320px;border-radius:6px;
-overflow:hidden;position:relative;transition:.4s;cursor
+overflow:hidden;position:relative;transition:.4s;cursor:pointer;
+}
+.card img{width:100%;height:100%;object-fit:cover}
+.card:hover{transform:scale(1.3);z-index:99}
+
+.info{
+position:absolute;bottom:0;width:100%;
+background:linear-gradient(transparent,black);
+padding:10px;opacity:0;transition:.3s;
+}
+.card:hover .info{opacity:1}
+
+#modal{
+display:none;position:fixed;inset:0;
+background:rgba(0,0,0,0.95);z-index:9999;
+padding:50px;overflow:auto;
+}
+button{padding:10px 20px;cursor:pointer;margin-top:20px}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="logo">
+<img src="https://i.pinimg.com/originals/66/32/ab/6632ab2673295963952f41b2725e6834.jpg">
+<span style="color:#e50914">JOKER</span>
+</div>
+<div class="nav">
+<span>الرئيسية</span>
+<span>أفلام</span>
+<span>مسلسلات</span>
+</div>
+</header>
+
+<div class="hero">
+<div>
+<h1>JOKER</h1>
+<p>Welcome to chaos 🔥</p>
+</div>
+</div>
+
+<div class="section">🔥 Trending</div>
+<div class="row" id="trending"></div>
+
+<div class="section">⭐ Top Rated</div>
+<div class="row" id="top"></div>
+
+<div id="modal"></div>
+
+<script>
+
+/* 🔑 مفتاحك جاهز */
+const API_KEY = "dde3081de76eb8146bcd702921acd3e4";
+
+/* تحميل أفلام */
+async function load(url,id){
+try{
+const res=await fetch(url);
+const data=await res.json();
+
+const cont=document.getElementById(id);
+cont.innerHTML="";
+
+data.results.forEach(m=>{
+if(!m.poster_path) return;
+
+cont.innerHTML+=`
+<div class="card" onclick='openMovie(${JSON.stringify(m)})'>
+<img src="https://image.tmdb.org/t/p/w500${m.poster_path}">
+<div class="info"><h4>${m.title}</h4></div>
+</div>`;
+});
+}catch(e){
+console.log("خطأ:",e);
+}
+}
+
+/* تشغيل الأقسام */
+load(`https://api.themoviedb.org/3/trending/movie/week?api_key=${API_KEY}`,"trending");
+load(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}`,"top");
+
+/* فتح الفيلم */
+async function openMovie(m){
+
+try{
+const res=await fetch(`https://api.themoviedb.org/3/movie/${m.id}/videos?api_key=${API_KEY}`);
+const d=await res.json();
+
+const trailer=d.results.find(v=>v.type==="Trailer");
+
+modal.style.display='block';
+
+modal.innerHTML=`
+<h1>${m.title}</h1>
+<p>${m.overview}</p>
+<p>⭐ ${m.vote_average}</p>
+
+<iframe width="100%" height="400"
+src="https://www.youtube.com/embed/${trailer?.key || ""}">
+</iframe>
+
+<br>
+<button onclick="modal.style.display='none'">إغلاق</button>
+`;
+
+}catch(e){
+console.log(e);
+}
+}
+
+</script>
+
+</body>
+</html>
