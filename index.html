@@ -70,16 +70,23 @@ const db = firebase.database();
 /* 🔑 TMDB */
 const API_KEY = "dde3081de76eb8146bcd702921acd3e4";
 
-/* تحويل رابط Google Drive */
+/* 🔥 تحويل رابط Google Drive إلى preview */
 function convertDrive(url){
 if(url.includes("drive.google.com")){
-let id = url.split("/d/")[1].split("/")[0];
+let id;
+
+if(url.includes("/d/")){
+id = url.split("/d/")[1].split("/")[0];
+}else if(url.includes("id=")){
+id = url.split("id=")[1];
+}
+
 return "https://drive.google.com/file/d/"+id+"/preview";
 }
 return url;
 }
 
-/* ➕ إضافة */
+/* ➕ إضافة فيلم */
 async function addMovie(){
 
 let name = document.getElementById("name").value;
@@ -111,7 +118,7 @@ url: url
 alert("تمت الإضافة 🔥");
 }
 
-/* 📺 عرض */
+/* 📺 عرض الأفلام */
 db.ref("movies").on("value", snap=>{
 
 const cont = document.getElementById("movies");
