@@ -1,68 +1,8 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة الأفلام الخاصة بي</title>
-    <style>
-        /* تصميم يشبه نتفليكس */
-        body { background-color: #111; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; }
-        header { background-color: rgba(0,0,0,0.8); padding: 20px; position: fixed; width: 100%; z-index: 100; color: #E50914; font-size: 28px; font-weight: bold; }
-        .hero { height: 80vh; background-size: cover; background-position: center; display: flex; align-items: flex-end; padding: 50px; background-image: linear-gradient(to top, #111, transparent); }
-        .row { padding: 20px; }
-        .posters { display: flex; overflow-y: hidden; overflow-x: scroll; padding: 20px; gap: 15px; }
-        .posters::-webkit-scrollbar { display: none; }
-        .poster { width: 160px; border-radius: 8px; transition: transform 0.3s; cursor: pointer; }
-        .poster:hover { transform: scale(1.1); border: 2px solid white; }
-        h2 { margin-right: 20px; font-size: 22px; }
-    </style>
-</head>
-<body>
-
-<header>NETFLIX CLONE</header>
-
-<div class="hero" id="hero">
-    <div>
-        <h1 id="hero-title">جاري التحميل...</h1>
-        <p id="hero-desc" style="max-width: 600px;"></p>
-    </div>
-</div>
-
-<div class="row">
-    <h2>أفلام مقترحة لك</h2>
-    <div class="posters" id="movies-row">
-        <!-- الأفلام ستظهر هنا تلقائياً -->
-    </div>
-</div>
-
-<script>
-    // هذا الجزء لجلب البيانات من الإنترنت (TMDB API)
-    const API_KEY = '862024251648a8043632b7337397e5d8'; // مفتاح تجريبي
-    const IMG_PATH = 'https://image.tmdb.org/t/p/w500';
-
-    async function getMovies() {
-        const res = await fetch(`https://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=${API_KEY}&language=ar`);
-        const data = await res.json();
-        const movies = data.results;
-
-        // عرض أول فيلم في الخلفية الكبيرة
-        document.getElementById('hero').style.backgroundImage = `url(${IMG_PATH + movies[0].backdrop_path})`;
-        document.getElementById('hero-title').innerText = movies[0].title;
-        document.getElementById('hero-desc').innerText = movies[0].overview;
-
-        // عرض باقي الأفلام في القائمة
-        const row = document.getElementById('movies-row');
-        movies.forEach(movie => {
-            const img = document.createElement('img');
-            img.classList.add('poster');
-            img.src = IMG_PATH + movie.poster_path;
-            img.onclick = () => alert('تم اختيار: ' + movie.title + '\nالقصة: ' + movie.overview);
-            row.appendChild(img);
-        });
-    }
-
-    getMovies();
-</script>
-
-</body>
-</html>
+const firebaseConfig = {
+  apiKey: "AIzaSyArRrIq2iTS3deGSaFgX70k1ZB98wKvLbs",
+  authDomain: "mymoveis.firebaseapp.com",
+  projectId: "mymoveis",
+  storageBucket: "mymoveis.firebasestorage.app",
+  messagingSenderId: "771499622971",
+  appId: "1:771499622971:web:152e5a9acea54407be121e",
+  measurementId: "G-180RE7CGD1"
