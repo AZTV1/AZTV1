@@ -3,104 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AZTV1 - سحابة الأفلام</title>
+    <title>AZTV1 - مكتبة الأفلام</title>
+    <!-- ربط مكتبة Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
-        body { background-color: #000; color: #fff; font-family: sans-serif; margin: 0; text-align: center; }
-        header { padding: 25px; border-bottom: 3px solid #ff0000; background: #050505; }
-        .logo { color: #FFD700; font-size: 35px; font-weight: bold; letter-spacing: 3px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
-        .upload-card { background: #0a0a0a; padding: 30px; margin: 20px; border: 2px dashed #ff0000; border-radius: 15px; }
-        .btn-red { background: #ff0000; color: white; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-weight: bold; display: inline-block; border: none; }
-        #progress-container { width: 90%; background: #222; height: 10px; border-radius: 10px; margin: 20px auto; display: none; overflow: hidden; }
-        #progress-bar { width: 0%; height: 100%; background: #FFD700; transition: 0.3s; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 20px; }
-        .movie-card { background: #111; border: 1px solid #333; border-radius: 10px; padding: 10px; }
-        .movie-card p { color: #FFD700; font-weight: bold; margin-bottom: 10px; }
-        video { width: 100%; border-radius: 8px; border: 1px solid #222; }
+        body { background-color: #000; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; text-align: center; }
+        header { padding: 30px; border-bottom: 3px solid #ff0000; background: linear-gradient(to bottom, #111, #000); }
+        .logo { color: #FFD700; font-size: 40px; font-weight: bold; letter-spacing: 5px; text-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+        
+        .add-section { background: #0a0a0a; padding: 25px; margin: 20px auto; max-width: 500px; border: 1px solid #333; border-radius: 15px; box-shadow: 0 0 20px rgba(255,0,0,0.1); }
+        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #1a1a1a; color: #fff; text-align: center; }
+        .btn-add { background: #ff0000; color: #fff; padding: 12px 40px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        .btn-add:hover { background: #cc0000; transform: scale(1.05); }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; padding: 30px; }
+        .movie-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 15px; transition: 0.3s; }
+        .movie-card:hover { border-color: #FFD700; }
+        .movie-card p { color: #FFD700; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+        video { width: 100%; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
 
 <header><div class="logo">AZTV1</div></header>
 
-<div class="upload-card">
-    <h1 style="color: #ff0000;">مركـز الرفـع السحابـي</h1>
-    <p>ارفع أفلامك هنا لتشاهدها من أي جهاز في العالم</p>
-    <label for="fileItem" class="btn-red">🎬 اختـر الفيلم للرفـع</label>
-    <input type="file" id="fileItem" accept="video/*" style="display:none;">
-    <div id="progress-container"><div id="progress-bar"></div></div>
-    <p id="status" style="margin-top: 15px; color: #FFD700;"></p>
+<div class="add-section">
+    <h3 style="color: #ff0000;">إضافة فيلم جديد للمكتبة</h3>
+    <input type="text" id="movieName" placeholder="اكتب اسم الفيلم هنا">
+    <input type="text" id="movieUrl" placeholder="ضع رابط الفيديو المباشر هنا">
+    <br>
+    <button class="btn-add" onclick="saveToCloud()">إضافة الآن 🎬</button>
 </div>
 
-<h2 style="color: #ff0000;">مكتبتـي الخاصـة</h2>
-<div class="grid" id="moviesList"></div>
-
-<script>
-    // بيانات الـ Firebase الخاصة بعبد العزيز (التي صورتها لي)
-    const firebaseConfig = {
-        apiKey: "AIzaSyArRrIq2iTS3deGSaFgX70k1ZB98wKv-f0",
-        authDomain: "mymoveis.firebaseapp.com",
-        projectId: "mymoveis",
-        storageBucket: "mymoveis.firebasestorage.app",
-        messagingSenderId: "771499622971",
-        appId: "1:771499622971:web:152e5a9acea54407be3541",
-        measurementId: "G-180RE7CGD1"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const storage = firebase.storage();
-    const database = firebase.database();
-
-    const fileInput = document.getElementById('fileItem');
-    const status = document.getElementById('status');
-    const progressBar = document.getElementById('progress-bar');
-    const progressContainer = document.getElementById('progress-container');
-
-    fileInput.onchange = function(e) {
-        const file = e.target.files[0];
-        if(!file) return;
-
-        progressContainer.style.display = 'block';
-        const storageRef = storage.ref('movies/' + file.name);
-        const uploadTask = storageRef.put(file);
-
-        uploadTask.on('state_changed', 
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                progressBar.style.width = progress + "%";
-                status.innerText = "جاري الرفع للسحابة: " + Math.round(progress) + "%";
-            }, 
-            (error) => { 
-                status.innerText = "فشل الرفع! تأكد من تفعيل Storage Rules"; 
-                console.error(error); 
-            }, 
-            () => {
-                uploadTask.snapshot.ref.getDownloadURL().then((url) => {
-                    database.ref('list').push({ name: file.name, url: url });
-                    status.innerText = "✅ تم الحفظ! جاري تحديث المكتبة...";
-                    setTimeout(() => { location.reload(); }, 2000);
-                });
-            }
-        );
-    };
-
-    // جلب الأفلام من السحابة وعرضها
-    database.ref('list').on('value', (snapshot) => {
-        const list = document.getElementById('moviesList');
-        list.innerHTML = "";
-        snapshot.forEach((child) => {
-            const m = child.val();
-            list.innerHTML += `
-                <div class="movie-card">
-                    <p>${m.name}</p>
-                    <video controls src="${m.url}"></video>
-                </div>`;
-        });
-    });
-</script>
-
-</body>
-</html>
+<h2 style="color: #FFD700; border-bottom: 1px solid #222; display: inline-block; padding
