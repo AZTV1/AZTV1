@@ -2,25 +2,26 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>JOKER</title>
+<title>NETFLIX+</title>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
 body{margin:0;background:#000;color:#fff;font-family:'Cairo'}
 
-header{padding:15px 50px;font-size:28px;font-weight:bold}
+header{
+padding:20px;
+font-size:35px;
+color:#e50914;
+font-weight:bold;
+}
 
 .row{display:flex;gap:10px;overflow-x:auto;padding:20px}
-.row::-webkit-scrollbar{display:none}
-
-.card{min-width:200px;height:300px;cursor:pointer;transition:.3s}
-.card img{width:100%;height:100%;object-fit:cover;border-radius:6px}
-.card:hover{transform:scale(1.1)}
+.card{min-width:200px;height:300px;cursor:pointer}
+.card img{width:100%;height:100%;object-fit:cover}
 
 #admin{
 position:fixed;
@@ -30,23 +31,26 @@ background:#111;
 padding:10px;
 display:flex;
 gap:10px;
+flex-wrap:wrap;
 }
 
 input,select{padding:8px;border:none;border-radius:5px}
-button{padding:8px 15px;cursor:pointer}
+button{padding:8px 15px;cursor:pointer;background:#e50914;color:#fff;border:none}
+
 </style>
 </head>
 
 <body>
 
-<header>JOKER</header>
+<header>NETFLIX+</header>
 
 <div class="row" id="movies"></div>
 
 <!-- ADMIN -->
 <div id="admin">
 <input id="name" placeholder="اسم الفيلم">
-<input id="url" placeholder="رابط Google Drive">
+<input id="url" placeholder="رابط (اختياري)">
+<input type="file" id="file">
 <select id="type">
 <option value="movie">فيلم</option>
 <option value="tv">مسلسل</option>
@@ -56,7 +60,7 @@ button{padding:8px 15px;cursor:pointer}
 
 <script>
 
-/* 🔥 Firebase */
+/* Firebase */
 const firebaseConfig = {
   apiKey: "AIzaSyArRrIq2iTS3deGSaFgX70k1ZB98wKvLbs",
   authDomain: "mymoveis.firebaseapp.com",
@@ -67,67 +71,77 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/* 🔑 TMDB */
+/* TMDB */
 const API_KEY = "dde3081de76eb8146bcd702921acd3e4";
 
-/* 🔥 تحويل رابط Google Drive إلى preview */
+/* تحويل Google Drive */
 function convertDrive(url){
 if(url.includes("drive.google.com")){
-let id;
-
-if(url.includes("/d/")){
-id = url.split("/d/")[1].split("/")[0];
-}else if(url.includes("id=")){
-id = url.split("id=")[1];
-}
-
-return "https://drive.google.com/file/d/"+id+"/preview";
+let id = url.split("/d/")[1]?.split("/")[0] || url.split("id=")[1];
+return "https://drive.google.com/uc?export=download&id="+id;
 }
 return url;
 }
 
-/* ➕ إضافة فيلم */
+/* إضافة */
 async function addMovie(){
 
 let name = document.getElementById("name").value;
 let url = document.getElementById("url").value;
+let file = document.getElementById("file").files[0];
 let type = document.getElementById("type").value;
 
-if(!name || !url){
-alert("اكتب الاسم والرابط");
+if(!name){
+alert("اكتب الاسم");
 return;
 }
 
-/* تحويل الرابط */
-url = convertDrive(url);
+/* رفع من الجهاز */
+if(file){
+let reader = new FileReader();
+reader.onload = function(e){
+saveMovie(name, e.target.result);
+};
+reader.readAsDataURL(file);
+return;
+}
 
-/* TMDB */
-const res = await fetch(`https://api.themoviedb.org/3/search/${type}?api_key=${API_KEY}&query=${name}&language=ar-SA`);
+/* رابط */
+if(url){
+url = convertDrive(url);
+saveMovie(name, url);
+}
+
+}
+
+/* حفظ */
+async function saveMovie(name, url){
+
+const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${name}&language=ar-SA`);
 const data = await res.json();
 
-const m = data.results[0] || {};
+let m = data.results[0];
 
 db.ref("movies").push({
-name: m.title || m.name || name,
-poster: m.poster_path ? "https://image.tmdb.org/t/p/w500"+m.poster_path : "",
-story: m.overview || "لا يوجد وصف",
-rating: m.vote_average || "0",
+name: m?.title || name,
+poster: m?.poster_path ? "https://image.tmdb.org/t/p/w500"+m.poster_path : "",
+story: m?.overview || "لا يوجد وصف",
+rating: m?.vote_average || "0",
 url: url
 });
 
-alert("تمت الإضافة 🔥");
 }
 
-/* 📺 عرض الأفلام */
+/* عرض */
 db.ref("movies").on("value", snap=>{
 
 const cont = document.getElementById("movies");
-cont.innerHTML = "";
+cont.innerHTML="";
 
 snap.forEach(child=>{
 let m = child.val();
 
-cont.innerHTML += `
+cont.innerHTML+=`
 <div class="card" onclick='play(${JSON.stringify(m)})'>
 <img src="${m.poster}">
 </div>`;
@@ -135,21 +149,32 @@ cont.innerHTML += `
 
 });
 
-/* ▶ تشغيل */
+/* تشغيل */
 function play(m){
 
-document.body.innerHTML = `
-<h1 style="padding:20px">${m.name}</h1>
-<p style="padding:20px">${m.story}</p>
-<p style="padding:20px">⭐ ${m.rating}</p>
+let isDrive = m.url.includes("drive");
 
-<iframe width="100%" height="400" src="${m.url}" allowfullscreen></iframe>
+document.body.innerHTML=`
+<h2>${m.name}</h2>
+<p>${m.story}</p>
+
+${isDrive 
+? `<video controls width="100%" src="${m.url}"></video>` 
+: `<video controls width="100%" src="${m.url}"></video>`}
+
+<br>
+<a href="${m.url}" download>تحميل الفيلم</a>
 
 <br><br>
 <button onclick="location.reload()">رجوع</button>
 `;
 
 }
+
+/* تحديث تلقائي للتلفاز */
+setInterval(()=>{
+location.reload();
+},60000);
 
 </script>
 
