@@ -5,146 +5,183 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JOKER</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
 
 <style>
-body{margin:0;background:#080808;color:#fff;font-family:'Cairo'}
+body{
+margin:0;
+background:#000;
+color:#fff;
+font-family:'Cairo';
+}
 
+/* HEADER */
 header{
-position:fixed;width:100%;padding:15px 50px;
-display:flex;align-items:center;
-background:linear-gradient(to bottom,#000,transparent);
-z-index:999;
+padding:15px 50px;
+font-size:28px;
+font-weight:bold;
 }
-.logo{display:flex;align-items:center;gap:10px;font-size:28px;font-weight:bold}
-.logo img{width:45px;height:45px;border-radius:50%}
-.nav{margin-right:40px;display:flex;gap:20px;color:#ccc}
 
-.hero{
-height:90vh;
-background:
-linear-gradient(to right,#080808 20%,transparent),
-url('https://wallpapercave.com/wp/wp1812412.jpg');
-background-size:cover;
-display:flex;align-items:center;padding:0 60px;
+/* ROW */
+.row{
+display:flex;
+gap:10px;
+overflow-x:auto;
+padding:20px;
 }
-.hero h1{font-size:90px;margin:0}
-
-.section{margin:40px 50px 10px;font-size:22px}
-.row{display:flex;overflow-x:auto;gap:10px;padding:20px 50px}
 .row::-webkit-scrollbar{display:none}
 
+/* CARD */
 .card{
-min-width:220px;height:320px;border-radius:6px;
-overflow:hidden;position:relative;transition:.4s;cursor:pointer;
+min-width:200px;
+height:300px;
+cursor:pointer;
+transition:.3s;
 }
-.card img{width:100%;height:100%;object-fit:cover}
-.card:hover{transform:scale(1.3);z-index:99}
+.card img{
+width:100%;
+height:100%;
+object-fit:cover;
+border-radius:5px;
+}
+.card:hover{
+transform:scale(1.1);
+}
 
-.info{
-position:absolute;bottom:0;width:100%;
-background:linear-gradient(transparent,black);
-padding:10px;opacity:0;transition:.3s;
+/* ADMIN */
+#admin{
+position:fixed;
+bottom:0;
+width:100%;
+background:#111;
+padding:10px;
+display:flex;
+gap:10px;
 }
-.card:hover .info{opacity:1}
 
-#modal{
-display:none;position:fixed;inset:0;
-background:rgba(0,0,0,0.95);z-index:9999;
-padding:50px;overflow:auto;
+input,select{
+padding:8px;
+border:none;
+border-radius:5px;
 }
-button{padding:10px 20px;cursor:pointer;margin-top:20px}
+button{
+padding:8px 15px;
+cursor:pointer;
+}
+
 </style>
 </head>
 
 <body>
 
-<header>
-<div class="logo">
-<img src="https://i.pinimg.com/originals/66/32/ab/6632ab2673295963952f41b2725e6834.jpg">
-<span style="color:#e50914">JOKER</span>
-</div>
-<div class="nav">
-<span>الرئيسية</span>
-<span>أفلام</span>
-<span>مسلسلات</span>
-</div>
-</header>
+<header>JOKER</header>
 
-<div class="hero">
-<div>
-<h1>JOKER</h1>
-<p>Welcome to chaos 🔥</p>
+<div class="row" id="movies"></div>
+
+<!-- ADMIN -->
+<div id="admin">
+<input id="name" placeholder="اسم الفيلم">
+<input id="url" placeholder="رابط التشغيل">
+<select id="type">
+<option value="movie">فيلم</option>
+<option value="tv">مسلسل</option>
+</select>
+<button onclick="addMovie()">إضافة</button>
 </div>
-</div>
-
-<div class="section">🔥 Trending</div>
-<div class="row" id="trending"></div>
-
-<div class="section">⭐ Top Rated</div>
-<div class="row" id="top"></div>
-
-<div id="modal"></div>
 
 <script>
 
-/* 🔑 مفتاحك جاهز */
+/* 🔥 Firebase */
+const firebaseConfig = {
+  apiKey: "AIzaSyArRrIq2iTS3deGSaFgX70k1ZB98wKvLbs",
+  authDomain: "mymoveis.firebaseapp.com",
+  databaseURL: "https://mymoveis-default-rtdb.firebaseio.com",
+  projectId: "mymoveis",
+  storageBucket: "mymoveis.firebasestorage.app",
+  messagingSenderId: "771499622971",
+  appId: "1:771499622971:web:152e5a9acea54407be121e",
+  measurementId: "G-180RE7CGD1"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* 🔑 TMDB */
 const API_KEY = "dde3081de76eb8146bcd702921acd3e4";
 
-/* تحميل أفلام */
-async function load(url,id){
-try{
-const res=await fetch(url);
-const data=await res.json();
+/* ➕ إضافة فيلم */
+async function addMovie(){
 
-const cont=document.getElementById(id);
-cont.innerHTML="";
+let name = document.getElementById("name").value;
+let url = document.getElementById("url").value;
+let type = document.getElementById("type").value;
 
-data.results.forEach(m=>{
-if(!m.poster_path) return;
+if(!name || !url){
+alert("اكتب الاسم والرابط");
+return;
+}
 
-cont.innerHTML+=`
-<div class="card" onclick='openMovie(${JSON.stringify(m)})'>
-<img src="https://image.tmdb.org/t/p/w500${m.poster_path}">
-<div class="info"><h4>${m.title}</h4></div>
+const res = await fetch(`https://api.themoviedb.org/3/search/${type}?api_key=${API_KEY}&query=${name}&language=ar-SA`);
+const data = await res.json();
+
+const m = data.results[0];
+
+const vid = await fetch(`https://api.themoviedb.org/3/${type}/${m.id}/videos?api_key=${API_KEY}`);
+const vd = await vid.json();
+
+const trailer = vd.results.find(v=>v.type==="Trailer");
+
+db.ref("movies").push({
+name: m.title || m.name,
+poster: "https://image.tmdb.org/t/p/w500"+m.poster_path,
+story: m.overview,
+rating: m.vote_average,
+url: url,
+trailer: trailer?.key || ""
+});
+
+alert("تمت الإضافة 🔥");
+}
+
+/* 📺 عرض الأفلام */
+db.ref("movies").on("value", snap=>{
+
+const cont = document.getElementById("movies");
+cont.innerHTML = "";
+
+snap.forEach(child=>{
+let m = child.val();
+
+cont.innerHTML += `
+<div class="card" onclick='play(${JSON.stringify(m)})'>
+<img src="${m.poster}">
 </div>`;
 });
-}catch(e){
-console.log("خطأ:",e);
-}
-}
 
-/* تشغيل الأقسام */
-load(`https://api.themoviedb.org/3/trending/movie/week?api_key=${API_KEY}`,"trending");
-load(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}`,"top");
+});
 
-/* فتح الفيلم */
-async function openMovie(m){
+/* ▶ تشغيل */
+function play(m){
 
-try{
-const res=await fetch(`https://api.themoviedb.org/3/movie/${m.id}/videos?api_key=${API_KEY}`);
-const d=await res.json();
+document.body.innerHTML = `
+<h1 style="padding:20px">${m.name}</h1>
+<p style="padding:20px">${m.story}</p>
+<p style="padding:20px">⭐ ${m.rating}</p>
 
-const trailer=d.results.find(v=>v.type==="Trailer");
+<video controls width="100%" src="${m.url}"></video>
 
-modal.style.display='block';
-
-modal.innerHTML=`
-<h1>${m.title}</h1>
-<p>${m.overview}</p>
-<p>⭐ ${m.vote_average}</p>
-
-<iframe width="100%" height="400"
-src="https://www.youtube.com/embed/${trailer?.key || ""}">
+<iframe width="100%" height="300"
+src="https://www.youtube.com/embed/${m.trailer}">
 </iframe>
 
-<br>
-<button onclick="modal.style.display='none'">إغلاق</button>
+<br><br>
+<button onclick="location.reload()">رجوع</button>
 `;
 
-}catch(e){
-console.log(e);
-}
 }
 
 </script>
