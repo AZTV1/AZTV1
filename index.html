@@ -1,198 +1,500 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NETFLIX+</title>
-
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
-<style>
-body {margin:0;background:black;color:white;font-family:Arial;}
-.header {padding:15px;font-size:24px;color:#e50914;}
-
-video {
-  width:100%;
-  height:240px;
-  background:black;
-}
-
-.episode {
-  background:#1a1a1a;
-  margin:6px;
-  padding:12px;
-  border-radius:8px;
-  cursor:pointer;
-  position:relative;
-}
-
-.delete {
-  position:absolute;
-  right:10px;
-  color:red;
-  display:none;
-}
-
-.admin .delete {display:block;}
-
-input,button {
-  width:100%;
-  padding:10px;
-  margin-top:6px;
-  border-radius:8px;
-  border:none;
-}
-
-button {
-  background:#e50914;
-  color:white;
-}
-
-.secret {
-  position:fixed;
-  bottom:10px;
-  right:10px;
-  opacity:0.3;
-}
-</style>
-</head>
-
-<body>
-
-<div class="header">NETFLIX+</div>
-
-<video id="video" controls playsinline></video>
-<div id="title" style="padding:10px;">Episode</div>
-
-<div style="padding:10px;">
-<input type="file" id="file">
-<input type="text" id="link" placeholder="Drive / Direct / m3u8">
-<input type="number" id="num" placeholder="Episode Number">
-
-<button onclick="add()">Add Episode</button>
-</div>
-
-<div id="episodes"></div>
-
-<button class="secret" onclick="login()">⚙️</button>
-
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } 
-from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-
-// 🔥 بياناتك جاهزة
-const firebaseConfig = {
-  apiKey: "AIzaSyArRrIq2iTS3deGSaFgX70k1ZB98wKvLbs",
-  authDomain: "mymoveis.firebaseapp.com",
-  databaseURL: "https://mymoveis-default-rtdb.firebaseio.com",
-  projectId: "mymoveis",
-  storageBucket: "mymoveis.firebasestorage.app",
-  messagingSenderId: "771499622971",
-  appId: "1:771499622971:web:1fae519506a6d719be121e",
-  measurementId: "G-B4Q2NMQTY9"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-let data = [];
-let current = 0;
-let isAdmin = false;
-let hls;
-
-// 🔥 تحميل مباشر من Firebase
-onValue(ref(db, "episodes"), (snapshot) => {
-  data = snapshot.val() || [];
-  render();
-});
-
-// ➕ إضافة حلقة
-window.add = function(){
-  const num = document.getElementById("num").value;
-  const file = document.getElementById("file").files[0];
-  const link = document.getElementById("link").value;
-
-  let src = "";
-
-  if(file){
-    src = URL.createObjectURL(file);
-  } else if(link){
-    const id = link.match(/[-\w]{25,}/);
-    if(id){
-      src = "https://drive.google.com/uc?export=download&id="+id[0];
-    } else {
-      src = link;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XO</title>
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      -webkit-tap-highlight-color:transparent;
     }
-  }
 
-  if(!num || !src) return alert("❌");
+    body{
+      font-family: Arial, sans-serif;
+      background:#050507;
+      color:#fff;
+      min-height:100vh;
+    }
 
-  data.push({num:parseInt(num), url:src});
-  data.sort((a,b)=>a.num-b.num);
+    .app{
+      max-width:430px;
+      margin:0 auto;
+      min-height:100vh;
+      background:
+        radial-gradient(circle at top, rgba(125,0,18,.28), transparent 30%),
+        linear-gradient(to bottom, #0a0a0d 0%, #050507 100%);
+      padding-bottom:30px;
+    }
 
-  set(ref(db, "episodes"), data); // 🔥 حفظ أونلاين
-};
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:18px 16px 10px;
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:linear-gradient(to bottom, rgba(5,5,7,.95), rgba(5,5,7,.45), transparent);
+      backdrop-filter: blur(8px);
+    }
 
-// 🎬 عرض الحلقات
-function render(){
-  const box = document.getElementById("episodes");
-  box.innerHTML="";
+    .logo{
+      font-size:34px;
+      font-weight:900;
+      letter-spacing:1px;
+    }
 
-  data.forEach((ep,i)=>{
-    const div = document.createElement("div");
-    div.className="episode";
+    .logo .x{ color:#e50914; }
+    .logo .o{ color:#fff; }
 
-    div.innerHTML = `
-      Episode ${ep.num}
-      <span class="delete" onclick="del(${i})">🗑</span>
-    `;
+    .top-icons{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
 
-    div.onclick = ()=>{current=i;play();};
+    .icon-btn{
+      width:38px;
+      height:38px;
+      border-radius:12px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-size:16px;
+      backdrop-filter:blur(10px);
+      cursor:pointer;
+    }
 
-    box.appendChild(div);
-  });
-}
+    .hero{
+      margin:12px 16px 18px;
+      border-radius:24px;
+      overflow:hidden;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 12px 35px rgba(0,0,0,.35);
+    }
 
-// ▶ تشغيل
-function play(){
-  const v = document.getElementById("video");
-  const ep = data[current];
-  if(!ep) return;
+    .hero-image{
+      height:260px;
+      background:
+        linear-gradient(to top, rgba(0,0,0,.9), rgba(0,0,0,.1)),
+        url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1200&auto=format&fit=crop') center/cover no-repeat;
+      position:relative;
+    }
 
-  document.getElementById("title").innerText = "Episode "+ep.num;
+    .badge{
+      position:absolute;
+      bottom:16px;
+      right:16px;
+      background:rgba(229,9,20,.18);
+      border:1px solid rgba(229,9,20,.35);
+      color:#ffb3b8;
+      padding:7px 14px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+    }
 
-  if(ep.url.includes(".m3u8")){
-    if(hls) hls.destroy();
-    hls = new Hls();
-    hls.loadSource(ep.url);
-    hls.attachMedia(v);
-  } else {
-    if(hls) hls.destroy();
-    v.src = ep.url;
-  }
-}
+    .hero-content{
+      padding:18px 16px 18px;
+    }
 
-// ❌ حذف
-window.del = function(i){
-  if(!isAdmin) return alert("❌ Not allowed");
+    .hero-title{
+      font-size:28px;
+      font-weight:900;
+      margin-bottom:10px;
+    }
 
-  data.splice(i,1);
-  set(ref(db, "episodes"), data);
-};
+    .hero-desc{
+      color:rgba(255,255,255,.76);
+      line-height:1.7;
+      font-size:14px;
+      margin-bottom:16px;
+    }
 
-// 🔐 أدمن
-window.login = function(){
-  const p = prompt("Enter code");
-  if(p=="2030"){
-    isAdmin=true;
-    document.body.classList.add("admin");
-    alert("🔥 ADMIN MODE");
-  }
-};
+    .hero-actions{
+      display:flex;
+      gap:10px;
+    }
 
-</script>
+    .btn{
+      border:none;
+      border-radius:14px;
+      padding:13px 16px;
+      font-weight:800;
+      font-size:14px;
+      cursor:pointer;
+    }
 
+    .btn-light{
+      flex:1;
+      background:#fff;
+      color:#000;
+    }
+
+    .btn-dark{
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.1);
+      min-width:120px;
+    }
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      overflow-x:auto;
+      padding:0 16px 16px;
+      scrollbar-width:none;
+    }
+
+    .tabs::-webkit-scrollbar{ display:none; }
+
+    .tab{
+      white-space:nowrap;
+      padding:10px 15px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.09);
+      color:#fff;
+      font-size:14px;
+    }
+
+    .tab.active{
+      background:#fff;
+      color:#000;
+      font-weight:700;
+    }
+
+    .section{
+      margin-bottom:24px;
+    }
+
+    .section-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:0 16px 12px;
+    }
+
+    .section-header h2{
+      font-size:20px;
+      font-weight:800;
+    }
+
+    .section-header span{
+      color:#ff5d66;
+      font-size:13px;
+    }
+
+    .cards{
+      display:flex;
+      gap:12px;
+      overflow-x:auto;
+      padding:0 16px;
+      scrollbar-width:none;
+    }
+
+    .cards::-webkit-scrollbar{ display:none; }
+
+    .card{
+      min-width:155px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow:0 10px 24px rgba(0,0,0,.22);
+      cursor:pointer;
+      transition:.2s ease;
+    }
+
+    .card:hover{
+      transform:translateY(-2px);
+      border-color:rgba(229,9,20,.45);
+    }
+
+    .card-poster{
+      height:210px;
+      background-size:cover;
+      background-position:center;
+    }
+
+    .card-info{
+      padding:11px;
+    }
+
+    .card-title{
+      font-size:14px;
+      font-weight:800;
+      margin-bottom:6px;
+    }
+
+    .card-meta{
+      font-size:12px;
+      color:rgba(255,255,255,.65);
+      line-height:1.5;
+    }
+
+    .info-panel{
+      margin:0 16px 24px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:22px;
+      padding:18px 16px;
+      box-shadow:0 10px 24px rgba(0,0,0,.22);
+    }
+
+    .info-title{
+      font-size:20px;
+      font-weight:800;
+      margin-bottom:12px;
+    }
+
+    .info-text{
+      color:rgba(255,255,255,.76);
+      line-height:1.8;
+      font-size:14px;
+    }
+
+    .example{
+      margin-top:12px;
+      color:#ff7f88;
+      font-weight:700;
+    }
+
+    .settings{
+      margin-top:12px;
+    }
+
+    .setting-row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 0;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      font-size:14px;
+    }
+
+    .setting-row:last-child{
+      border-bottom:none;
+    }
+
+    .setting-name{
+      color:rgba(255,255,255,.82);
+    }
+
+    .setting-value{
+      color:#fff;
+      text-align:left;
+    }
+
+    .bottom-space{
+      height:10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="top-icons">
+        <div class="icon-btn" title="القائمة">≡</div>
+        <div class="icon-btn" title="مشاركة الأجهزة المجاورة">📡</div>
+        <div class="icon-btn" title="الإشعارات">🔔</div>
+        <div class="icon-btn" onclick="searchStar()" title="البحث">⌕</div>
+      </div>
+      <div class="logo"><span class="x">X</span><span class="o">O</span></div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-image">
+        <div class="badge">معاينة</div>
+      </div>
+      <div class="hero-content">
+        <div class="hero-title">XO Original</div>
+        <div class="hero-desc">
+          واجهة XO النهائية بتصميم داكن فاخر، أقسام ذكية، بحث بالممثلين،
+          ودعم إعدادات البث المباشر للتلفاز والأجهزة المجاورة.
+        </div>
+        <div class="hero-actions">
+          <button class="btn btn-light">تشغيل</button>
+          <button class="btn btn-dark">التفاصيل</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active">الرئيسية</div>
+      <div class="tab">قائمتي</div>
+      <div class="tab">الأفلام</div>
+      <div class="tab">المسلسلات</div>
+      <div class="tab">البث المباشر</div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2>الجديد على XO</h2>
+        <span>عرض الكل</span>
+      </div>
+      <div class="cards">
+        <div class="card" data-star="Angelina Jolie">
+          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=800&auto=format&fit=crop');"></div>
+          <div class="card-info">
+            <div class="card-title">New on XO 1</div>
+            <div class="card-meta">إضافة جديدة</div>
+          </div>
+        </div>
+
+        <div class="card" data-star="Tom Cruise">
+          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=800&auto=format&fit=crop');"></div>
+          <div class="card-info">
+            <div class="card-title">New on XO 2</div>
+            <div class="card-meta">وصل للتو</div>
+          </div>
+        </div>
+
+        <div class="card" data-star="Ryan Gosling">
+          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?q=80&w=800&auto=format&fit=crop');"></div>
+          <div class="card-info">
+            <div class="card-title">New on XO 3</div>
+            <div class="card-meta">مشابه جديد</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2>أفلام أنجلينا جولي</h2>
+        <span>عرض الكل</span>
+      </div>
+      <div class="cards">
+        <div class="card" data-star="Angelina Jolie">
+          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=800&auto=format&fit=crop');"></div>
+          <div class="card-info">
+            <div class="card-title">Angelina 1</div>
+            <div class="card-meta">ضمن المحتوى</div>
+          </div>
+        </div>
+
+        <div class="card" data-star="Angelina Jolie">
+          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=800&auto=format&fit=crop');"></div>
+          <div class="card-info">
+            <div class="card-title">Angelina 2</div>
+            <div class="card-meta">أفلام مضافة</div>
+          </div>
+        </div>
+
+        <div class="card" data-star="Angelina Jolie">
+          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=800&auto=format&fit=crop');"></div>
+          <div class="card-info">
+            <div class="card-title">Angelina 3</div>
+            <div class="card-meta">مشابهة</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2>تحتاج إلى جلسة من الضحك؟</h2>
+        <span>عرض الكل</span>
+      </div>
+      <div class="cards">
+        <div class="card" data-star="Jennifer Aniston">
+          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?q=80&w=800&auto=format&fit=crop');"></div>
+          <div class="card-info">
+            <div class="card-title">Comedy 1</div>
+            <div class="card-meta">كوميديا مشابهة</div>
+          </div>
+        </div>
+
+        <div class="card" data-star="Steve Carell">
+          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=800&auto=format&fit=crop');"></div>
+          <div class="card-info">
+            <div class="card-title">Comedy 2</div>
+            <div class="card-meta">أعمال مرحة</div>
+          </div>
+        </div>
+
+        <div class="card" data-star="Adam Sandler">
+          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=800&auto=format&fit=crop');"></div>
+          <div class="card-info">
+            <div class="card-title">Comedy 3</div>
+            <div class="card-meta">مشابه لما تحب</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-panel">
+      <div class="info-title">البحث بالنجوم</div>
+      <div class="info-text">
+        ابحث باسم النجم أو النجمة لتظهر كل أعماله داخل المشغل.
+      </div>
+      <div class="example">مثال: Angelina Jolie</div>
+    </div>
+
+    <div class="info-panel">
+      <div class="info-title">إعدادات البث المباشر</div>
+      <div class="settings">
+        <div class="setting-row">
+          <div class="setting-name">وضع التلفاز</div>
+          <div class="setting-value">مفعّل</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-name">جودة البث</div>
+          <div class="setting-value">Auto / 1080p / 4K</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-name">المشغل الافتراضي</div>
+          <div class="setting-value">XO Player</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-name">إعادة الاتصال التلقائي</div>
+          <div class="setting-value">مفعّلة</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-name">مشاركة الأجهزة المجاورة</div>
+          <div class="setting-value">مفعّلة</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-space"></div>
+  </div>
+
+  <script>
+    function searchStar() {
+      const name = prompt("ابحث باسم النجم أو النجمة");
+      if (!name) return;
+
+      const cards = document.querySelectorAll(".card");
+      let found = false;
+
+      cards.forEach(card => {
+        const star = (card.getAttribute("data-star") || "").toLowerCase();
+        const title = (card.querySelector(".card-title")?.textContent || "").toLowerCase();
+        const query = name.toLowerCase();
+
+        if (star.includes(query) || title.includes(query)) {
+          card.style.outline = "2px solid rgba(229,9,20,.95)";
+          card.style.outlineOffset = "-2px";
+          card.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+          found = true;
+        } else {
+          card.style.outline = "none";
+        }
+      });
+
+      if (!found) {
+        alert("لا توجد نتائج في هذه المعاينة الحالية.");
+      }
+    }
+  </script>
 </body>
-</html>
+  </html>
