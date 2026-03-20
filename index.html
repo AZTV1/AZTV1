@@ -13,11 +13,14 @@
     }
 
     body{
-      font-family: Arial, sans-serif;
+      font-family:Arial,sans-serif;
       background:#050507;
       color:#fff;
       min-height:100vh;
+      overflow-x:hidden;
     }
+
+    .hidden{display:none !important;}
 
     .app{
       max-width:430px;
@@ -26,7 +29,238 @@
       background:
         radial-gradient(circle at top, rgba(125,0,18,.28), transparent 30%),
         linear-gradient(to bottom, #0a0a0d 0%, #050507 100%);
-      padding-bottom:30px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .splash-screen{
+      position:fixed;
+      inset:0;
+      z-index:300;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:
+        radial-gradient(circle at center, rgba(150,0,20,.22), transparent 40%),
+        linear-gradient(to bottom, #070709 0%, #030304 100%);
+      animation:splashFade 2.6s ease forwards;
+    }
+
+    .splash-logo{
+      font-size:72px;
+      font-weight:900;
+      letter-spacing:2px;
+      transform:scale(.9);
+      animation:logoPulse 1.6s ease forwards;
+    }
+
+    .splash-logo .x{ color:#e50914; }
+    .splash-logo .o{ color:#fff; }
+
+    @keyframes splashFade{
+      0%{opacity:1; visibility:visible;}
+      70%{opacity:1;}
+      100%{opacity:0; visibility:hidden;}
+    }
+
+    @keyframes logoPulse{
+      0%{opacity:0; transform:scale(.75);}
+      35%{opacity:1; transform:scale(1);}
+      100%{opacity:1; transform:scale(1.06);}
+    }
+
+    .login-screen{
+      position:fixed;
+      inset:0;
+      z-index:250;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:
+        radial-gradient(circle at top, rgba(130,0,22,.20), transparent 30%),
+        linear-gradient(to bottom, rgba(8,8,10,.98), rgba(5,5,7,1));
+      opacity:0;
+      pointer-events:none;
+      transition:.35s ease;
+    }
+
+    .login-screen.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .login-card{
+      width:100%;
+      max-width:370px;
+      border-radius:24px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 16px 40px rgba(0,0,0,.42);
+      padding:24px 18px;
+      backdrop-filter:blur(12px);
+    }
+
+    .login-logo{
+      text-align:center;
+      font-size:46px;
+      font-weight:900;
+      margin-bottom:14px;
+    }
+
+    .login-logo .x{color:#e50914;}
+    .login-logo .o{color:#fff;}
+
+    .login-title{
+      text-align:center;
+      font-size:24px;
+      font-weight:900;
+      margin-bottom:10px;
+    }
+
+    .login-desc{
+      text-align:center;
+      color:rgba(255,255,255,.72);
+      font-size:14px;
+      line-height:1.7;
+      margin-bottom:18px;
+    }
+
+    .field{
+      margin-bottom:12px;
+    }
+
+    .field label{
+      display:block;
+      font-size:13px;
+      color:rgba(255,255,255,.72);
+      margin-bottom:6px;
+    }
+
+    .field input{
+      width:100%;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      border-radius:14px;
+      padding:14px 12px;
+      outline:none;
+      font-size:14px;
+    }
+
+    .login-btn,
+    .save-btn,
+    .danger-btn{
+      width:100%;
+      border:none;
+      border-radius:14px;
+      padding:14px 16px;
+      font-weight:900;
+      font-size:15px;
+      cursor:pointer;
+      margin-top:8px;
+    }
+
+    .login-btn,
+    .save-btn{
+      background:#fff;
+      color:#000;
+    }
+
+    .danger-btn{
+      background:#e50914;
+      color:#fff;
+    }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.6);
+      z-index:98;
+      display:none;
+    }
+
+    .overlay.show{
+      display:block;
+    }
+
+    .drawer{
+      position:fixed;
+      top:0;
+      right:-320px;
+      width:300px;
+      height:100vh;
+      background:#0d0d12;
+      border-left:1px solid rgba(255,255,255,.08);
+      z-index:99;
+      transition:.25s ease;
+      padding:18px 14px 24px;
+      overflow-y:auto;
+    }
+
+    .drawer.show{
+      right:0;
+    }
+
+    .drawer-title{
+      font-size:22px;
+      font-weight:900;
+      margin-bottom:18px;
+    }
+
+    .drawer-item{
+      padding:14px 12px;
+      border-radius:14px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      margin-bottom:10px;
+      cursor:pointer;
+      font-size:14px;
+    }
+
+    .drawer-item.active{
+      border-color:rgba(229,9,20,.45);
+      color:#ff8f96;
+    }
+
+    .panel{
+      display:none;
+      margin-top:16px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:18px;
+      padding:14px;
+    }
+
+    .panel.show{
+      display:block;
+    }
+
+    .panel h3{
+      font-size:18px;
+      margin-bottom:12px;
+    }
+
+    .setting-row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 0;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      font-size:14px;
+    }
+
+    .setting-row:last-child{
+      border-bottom:none;
+    }
+
+    .setting-name{
+      color:rgba(255,255,255,.82);
+    }
+
+    .setting-value{
+      color:#fff;
+      text-align:left;
     }
 
     .topbar{
@@ -38,7 +272,7 @@
       top:0;
       z-index:50;
       background:linear-gradient(to bottom, rgba(5,5,7,.95), rgba(5,5,7,.45), transparent);
-      backdrop-filter: blur(8px);
+      backdrop-filter:blur(8px);
     }
 
     .logo{
@@ -69,6 +303,21 @@
       font-size:16px;
       backdrop-filter:blur(10px);
       cursor:pointer;
+    }
+
+    .search-box{
+      padding:0 16px 16px;
+    }
+
+    .search-input{
+      width:100%;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      border-radius:16px;
+      padding:14px 16px;
+      outline:none;
+      font-size:14px;
     }
 
     .hero{
@@ -163,6 +412,7 @@
       border:1px solid rgba(255,255,255,.09);
       color:#fff;
       font-size:14px;
+      cursor:pointer;
     }
 
     .tab.active{
@@ -222,6 +472,35 @@
       height:210px;
       background-size:cover;
       background-position:center;
+      position:relative;
+    }
+
+    .continue-badge{
+      position:absolute;
+      top:10px;
+      right:10px;
+      background:rgba(0,0,0,.55);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      padding:5px 10px;
+      border-radius:999px;
+      font-size:11px;
+    }
+
+    .progress-wrap{
+      position:absolute;
+      right:10px;
+      left:10px;
+      bottom:10px;
+      height:6px;
+      background:rgba(255,255,255,.18);
+      border-radius:999px;
+      overflow:hidden;
+    }
+
+    .progress-bar{
+      height:100%;
+      background:#e50914;
     }
 
     .card-info{
@@ -240,85 +519,163 @@
       line-height:1.5;
     }
 
-    .info-panel{
-      margin:0 16px 24px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:22px;
-      padding:18px 16px;
-      box-shadow:0 10px 24px rgba(0,0,0,.22);
+    .cast-row{
+      display:flex;
+      gap:8px;
+      margin-top:10px;
+      overflow-x:auto;
+      scrollbar-width:none;
     }
 
-    .info-title{
-      font-size:20px;
-      font-weight:800;
-      margin-bottom:12px;
+    .cast-row::-webkit-scrollbar{ display:none; }
+
+    .cast-chip{
+      min-width:42px;
+      text-align:center;
+      cursor:pointer;
     }
 
-    .info-text{
-      color:rgba(255,255,255,.76);
-      line-height:1.8;
-      font-size:14px;
-    }
-
-    .example{
-      margin-top:12px;
-      color:#ff7f88;
+    .cast-avatar{
+      width:42px;
+      height:42px;
+      border-radius:50%;
+      background:linear-gradient(135deg,#666,#333);
+      border:2px solid rgba(255,255,255,.12);
+      margin:0 auto 5px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:11px;
+      color:#fff;
       font-weight:700;
     }
 
-    .settings{
-      margin-top:12px;
+    .cast-name{
+      font-size:10px;
+      color:rgba(255,255,255,.72);
+      line-height:1.3;
     }
 
-    .setting-row{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      padding:14px 0;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      font-size:14px;
+    .search-results-title{
+      padding:0 16px 12px;
+      font-size:18px;
+      font-weight:800;
+      display:none;
     }
 
-    .setting-row:last-child{
-      border-bottom:none;
-    }
-
-    .setting-name{
-      color:rgba(255,255,255,.82);
-    }
-
-    .setting-value{
-      color:#fff;
-      text-align:left;
+    .search-results-title.show{
+      display:block;
     }
 
     .bottom-space{
-      height:10px;
+      height:18px;
     }
   </style>
 </head>
 <body>
-  <div class="app">
+  <div class="splash-screen" id="splashScreen">
+    <div class="splash-logo"><span class="x">X</span><span class="o">O</span></div>
+  </div>
+
+  <div class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <div class="login-logo"><span class="x">X</span><span class="o">O</span></div>
+      <div class="login-title">تسجيل الدخول</div>
+      <div class="login-desc">أدخل بيانات مزود الخدمة للمتابعة إلى المشغل.</div>
+
+      <div class="field">
+        <label>اسم المستخدم</label>
+        <input type="text" id="loginUser" placeholder="اسم المستخدم">
+      </div>
+
+      <div class="field">
+        <label>كلمة المرور</label>
+        <input type="password" id="loginPass" placeholder="كلمة المرور">
+      </div>
+
+      <div class="field">
+        <label>رابط التشغيل</label>
+        <input type="text" id="loginUrl" placeholder="https://your-provider-url.com">
+      </div>
+
+      <button class="login-btn" onclick="enterApp()">دخول</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+  <div class="drawer" id="drawer">
+    <div class="drawer-title">القائمة</div>
+
+    <div class="drawer-item active" onclick="showPanel('settingsPanel', this)">الإعدادات</div>
+    <div class="drawer-item" onclick="showPanel('playerPanel', this)">المشغل</div>
+
+    <div class="panel show" id="settingsPanel">
+      <h3>الإعدادات</h3>
+      <div class="setting-row"><div class="setting-name">المظهر</div><div class="setting-value">داكن</div></div>
+      <div class="setting-row"><div class="setting-name">اللغة</div><div class="setting-value">العربية</div></div>
+      <div class="setting-row"><div class="setting-name">جودة البث الافتراضية</div><div class="setting-value">Auto</div></div>
+      <div class="setting-row"><div class="setting-name">وضع التلفاز</div><div class="setting-value">مفعّل</div></div>
+      <div class="setting-row"><div class="setting-name">التشغيل من حيث التوقف</div><div class="setting-value">مفعّل</div></div>
+      <div class="setting-row"><div class="setting-name">التشغيل التلقائي للحلقة التالية</div><div class="setting-value">مفعّل</div></div>
+      <div class="setting-row"><div class="setting-name">الإشعارات</div><div class="setting-value">مفعّلة</div></div>
+      <div class="setting-row"><div class="setting-name">مشاركة الأجهزة المجاورة</div><div class="setting-value">مفعّلة</div></div>
+      <div class="setting-row"><div class="setting-name">إخفاء القنوات غير المتاحة</div><div class="setting-value">مفعّل</div></div>
+    </div>
+
+    <div class="panel" id="playerPanel">
+      <h3>المشغل</h3>
+
+      <div class="field">
+        <label>اسم المستخدم</label>
+        <input type="text" id="drawerUser" value="demo_user">
+      </div>
+
+      <div class="field">
+        <label>كلمة المرور</label>
+        <input type="password" id="drawerPass" value="12345678">
+      </div>
+
+      <div class="field">
+        <label>الرابط</label>
+        <input type="text" id="drawerUrl" value="https://your-provider-url.com">
+      </div>
+
+      <button class="save-btn" onclick="savePlayerData()">حفظ بيانات المشغل</button>
+      <button class="danger-btn" onclick="logout()">تسجيل الخروج</button>
+    </div>
+  </div>
+
+  <div class="app hidden" id="mainApp">
     <div class="topbar">
       <div class="top-icons">
-        <div class="icon-btn" title="القائمة">≡</div>
+        <div class="icon-btn" title="القائمة" onclick="openDrawer()">≡</div>
         <div class="icon-btn" title="مشاركة الأجهزة المجاورة">📡</div>
         <div class="icon-btn" title="الإشعارات">🔔</div>
-        <div class="icon-btn" onclick="searchStar()" title="البحث">⌕</div>
+        <div class="icon-btn" title="البحث">⌕</div>
       </div>
       <div class="logo"><span class="x">X</span><span class="o">O</span></div>
     </div>
 
-    <div class="hero">
+    <div class="search-box">
+      <input
+        id="searchInput"
+        class="search-input"
+        type="text"
+        placeholder="ابحث عن فيلم أو مسلسل أو اسم ممثل"
+        oninput="searchContent()"
+      >
+    </div>
+
+    <div class="hero" id="heroSection">
       <div class="hero-image">
         <div class="badge">معاينة</div>
       </div>
       <div class="hero-content">
         <div class="hero-title">XO Original</div>
         <div class="hero-desc">
-          واجهة XO النهائية بتصميم داكن فاخر، أقسام ذكية، بحث بالممثلين،
-          ودعم إعدادات البث المباشر للتلفاز والأجهزة المجاورة.
+          واجهة XO النهائية مع شاشة افتتاحية متلاشية، تسجيل دخول، متابعة من حيث توقفت،
+          وبحث باسم الممثل أو عبر صور الممثلين داخل كل عمل.
         </div>
         <div class="hero-actions">
           <button class="btn btn-light">تشغيل</button>
@@ -327,140 +684,208 @@
       </div>
     </div>
 
-    <div class="tabs">
+    <div class="tabs" id="tabsSection">
       <div class="tab active">الرئيسية</div>
       <div class="tab">قائمتي</div>
       <div class="tab">الأفلام</div>
       <div class="tab">المسلسلات</div>
       <div class="tab">البث المباشر</div>
+      <div class="tab">تابع المشاهدة</div>
     </div>
 
-    <div class="section">
+    <div class="search-results-title" id="searchResultsTitle">نتائج البحث</div>
+
+    <div class="section searchable-section">
+      <div class="section-header">
+        <h2>تابع المشاهدة</h2>
+        <span>أكمل من حيث توقفت</span>
+      </div>
+      <div class="cards">
+        <div class="card searchable-card" data-title="Action Night" data-cast="Tom Cruise Rebecca Ferguson">
+          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=800&auto=format&fit=crop');">
+            <div class="continue-badge">47 دقيقة متبقية</div>
+            <div class="progress-wrap"><div class="progress-bar" style="width:62%"></div></div>
+          </div>
+          <div class="card-info">
+            <div class="card-title">Action Night</div>
+            <div class="card-meta">سيبدأ من حيث توقفت</div>
+            <div class="cast-row">
+              <div class="cast-chip" onclick="filterByActor('Tom Cruise')">
+                <div class="cast-avatar">TC</div>
+                <div class="cast-name">Tom</div>
+              </div>
+              <div class="cast-chip" onclick="filterByActor('Rebecca Ferguson')">
+                <div class="cast-avatar">RF</div>
+                <div class="cast-name">Rebecca</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card searchable-card" data-title="Dark City" data-cast="Angelina Jolie Morgan Freeman">
+          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=800&auto=format&fit=crop');">
+            <div class="continue-badge">1:12:08</div>
+            <div class="progress-wrap"><div class="progress-bar" style="width:35%"></div></div>
+          </div>
+          <div class="card-info">
+            <div class="card-title">Dark City</div>
+            <div class="card-meta">استئناف التشغيل تلقائيًا</div>
+            <div class="cast-row">
+              <div class="cast-chip" onclick="filterByActor('Angelina Jolie')">
+                <div class="cast-avatar">AJ</div>
+                <div class="cast-name">Angelina</div>
+              </div>
+              <div class="cast-chip" onclick="filterByActor('Morgan Freeman')">
+                <div class="cast-avatar">MF</div>
+                <div class="cast-name">Morgan</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card searchable-card" data-title="Comedy Street" data-cast="Jennifer Aniston Adam Sandler">
+          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?q=80&w=800&auto=format&fit=crop');">
+            <div class="continue-badge">الحلقة 5</div>
+            <div class="progress-wrap"><div class="progress-bar" style="width:78%"></div></div>
+          </div>
+          <div class="card-info">
+            <div class="card-title">Comedy Street</div>
+            <div class="card-meta">متابعة الحلقة من آخر نقطة</div>
+            <div class="cast-row">
+              <div class="cast-chip" onclick="filterByActor('Jennifer Aniston')">
+                <div class="cast-avatar">JA</div>
+                <div class="cast-name">Jennifer</div>
+              </div>
+              <div class="cast-chip" onclick="filterByActor('Adam Sandler')">
+                <div class="cast-avatar">AS</div>
+                <div class="cast-name">Adam</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section searchable-section">
       <div class="section-header">
         <h2>الجديد على XO</h2>
         <span>عرض الكل</span>
       </div>
       <div class="cards">
-        <div class="card" data-star="Angelina Jolie">
+        <div class="card searchable-card" data-title="New on XO 1" data-cast="Angelina Jolie Salma Hayek">
           <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=800&auto=format&fit=crop');"></div>
           <div class="card-info">
             <div class="card-title">New on XO 1</div>
             <div class="card-meta">إضافة جديدة</div>
+            <div class="cast-row">
+              <div class="cast-chip" onclick="filterByActor('Angelina Jolie')">
+                <div class="cast-avatar">AJ</div>
+                <div class="cast-name">Angelina</div>
+              </div>
+              <div class="cast-chip" onclick="filterByActor('Salma Hayek')">
+                <div class="cast-avatar">SH</div>
+                <div class="cast-name">Salma</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="card" data-star="Tom Cruise">
+        <div class="card searchable-card" data-title="New on XO 2" data-cast="Tom Cruise Hayley Atwell">
           <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=800&auto=format&fit=crop');"></div>
           <div class="card-info">
             <div class="card-title">New on XO 2</div>
             <div class="card-meta">وصل للتو</div>
+            <div class="cast-row">
+              <div class="cast-chip" onclick="filterByActor('Tom Cruise')">
+                <div class="cast-avatar">TC</div>
+                <div class="cast-name">Tom</div>
+              </div>
+              <div class="cast-chip" onclick="filterByActor('Hayley Atwell')">
+                <div class="cast-avatar">HA</div>
+                <div class="cast-name">Hayley</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="card" data-star="Ryan Gosling">
-          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?q=80&w=800&auto=format&fit=crop');"></div>
+        <div class="card searchable-card" data-title="New on XO 3" data-cast="Ryan Gosling Emma Stone">
+          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=800&auto=format&fit=crop');"></div>
           <div class="card-info">
             <div class="card-title">New on XO 3</div>
             <div class="card-meta">مشابه جديد</div>
+            <div class="cast-row">
+              <div class="cast-chip" onclick="filterByActor('Ryan Gosling')">
+                <div class="cast-avatar">RG</div>
+                <div class="cast-name">Ryan</div>
+              </div>
+              <div class="cast-chip" onclick="filterByActor('Emma Stone')">
+                <div class="cast-avatar">ES</div>
+                <div class="cast-name">Emma</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="section">
+    <div class="section searchable-section">
       <div class="section-header">
         <h2>أفلام أنجلينا جولي</h2>
         <span>عرض الكل</span>
       </div>
       <div class="cards">
-        <div class="card" data-star="Angelina Jolie">
+        <div class="card searchable-card" data-title="Angelina 1" data-cast="Angelina Jolie Morgan Freeman">
           <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=800&auto=format&fit=crop');"></div>
           <div class="card-info">
             <div class="card-title">Angelina 1</div>
             <div class="card-meta">ضمن المحتوى</div>
+            <div class="cast-row">
+              <div class="cast-chip" onclick="filterByActor('Angelina Jolie')">
+                <div class="cast-avatar">AJ</div>
+                <div class="cast-name">Angelina</div>
+              </div>
+              <div class="cast-chip" onclick="filterByActor('Morgan Freeman')">
+                <div class="cast-avatar">MF</div>
+                <div class="cast-name">Morgan</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="card" data-star="Angelina Jolie">
-          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=800&auto=format&fit=crop');"></div>
+        <div class="card searchable-card" data-title="Angelina 2" data-cast="Angelina Jolie Johnny Depp">
+          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=800&auto=format&fit=crop');"></div>
           <div class="card-info">
             <div class="card-title">Angelina 2</div>
             <div class="card-meta">أفلام مضافة</div>
+            <div class="cast-row">
+              <div class="cast-chip" onclick="filterByActor('Angelina Jolie')">
+                <div class="cast-avatar">AJ</div>
+                <div class="cast-name">Angelina</div>
+              </div>
+              <div class="cast-chip" onclick="filterByActor('Johnny Depp')">
+                <div class="cast-avatar">JD</div>
+                <div class="cast-name">Johnny</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="card" data-star="Angelina Jolie">
-          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=800&auto=format&fit=crop');"></div>
+        <div class="card searchable-card" data-title="Angelina 3" data-cast="Angelina Jolie Ethan Hawke">
+          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1513106580091-1d82408b8cd6?q=80&w=800&auto=format&fit=crop');"></div>
           <div class="card-info">
             <div class="card-title">Angelina 3</div>
             <div class="card-meta">مشابهة</div>
+            <div class="cast-row">
+              <div class="cast-chip" onclick="filterByActor('Angelina Jolie')">
+                <div class="cast-avatar">AJ</div>
+                <div class="cast-name">Angelina</div>
+              </div>
+              <div class="cast-chip" onclick="filterByActor('Ethan Hawke')">
+                <div class="cast-avatar">EH</div>
+                <div class="cast-name">Ethan</div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-header">
-        <h2>تحتاج إلى جلسة من الضحك؟</h2>
-        <span>عرض الكل</span>
-      </div>
-      <div class="cards">
-        <div class="card" data-star="Jennifer Aniston">
-          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?q=80&w=800&auto=format&fit=crop');"></div>
-          <div class="card-info">
-            <div class="card-title">Comedy 1</div>
-            <div class="card-meta">كوميديا مشابهة</div>
-          </div>
-        </div>
-
-        <div class="card" data-star="Steve Carell">
-          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=800&auto=format&fit=crop');"></div>
-          <div class="card-info">
-            <div class="card-title">Comedy 2</div>
-            <div class="card-meta">أعمال مرحة</div>
-          </div>
-        </div>
-
-        <div class="card" data-star="Adam Sandler">
-          <div class="card-poster" style="background-image:url('https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=800&auto=format&fit=crop');"></div>
-          <div class="card-info">
-            <div class="card-title">Comedy 3</div>
-            <div class="card-meta">مشابه لما تحب</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="info-panel">
-      <div class="info-title">البحث بالنجوم</div>
-      <div class="info-text">
-        ابحث باسم النجم أو النجمة لتظهر كل أعماله داخل المشغل.
-      </div>
-      <div class="example">مثال: Angelina Jolie</div>
-    </div>
-
-    <div class="info-panel">
-      <div class="info-title">إعدادات البث المباشر</div>
-      <div class="settings">
-        <div class="setting-row">
-          <div class="setting-name">وضع التلفاز</div>
-          <div class="setting-value">مفعّل</div>
-        </div>
-        <div class="setting-row">
-          <div class="setting-name">جودة البث</div>
-          <div class="setting-value">Auto / 1080p / 4K</div>
-        </div>
-        <div class="setting-row">
-          <div class="setting-name">المشغل الافتراضي</div>
-          <div class="setting-value">XO Player</div>
-        </div>
-        <div class="setting-row">
-          <div class="setting-name">إعادة الاتصال التلقائي</div>
-          <div class="setting-value">مفعّلة</div>
-        </div>
-        <div class="setting-row">
-          <div class="setting-name">مشاركة الأجهزة المجاورة</div>
-          <div class="setting-value">مفعّلة</div>
         </div>
       </div>
     </div>
@@ -469,32 +894,107 @@
   </div>
 
   <script>
-    function searchStar() {
-      const name = prompt("ابحث باسم النجم أو النجمة");
-      if (!name) return;
+    const loginScreen = document.getElementById("loginScreen");
+    const mainApp = document.getElementById("mainApp");
 
-      const cards = document.querySelectorAll(".card");
-      let found = false;
+    setTimeout(() => {
+      loginScreen.classList.add("show");
+    }, 2100);
 
-      cards.forEach(card => {
-        const star = (card.getAttribute("data-star") || "").toLowerCase();
-        const title = (card.querySelector(".card-title")?.textContent || "").toLowerCase();
-        const query = name.toLowerCase();
+    function enterApp(){
+      const user = document.getElementById("loginUser").value.trim();
+      const pass = document.getElementById("loginPass").value.trim();
+      const url = document.getElementById("loginUrl").value.trim();
 
-        if (star.includes(query) || title.includes(query)) {
-          card.style.outline = "2px solid rgba(229,9,20,.95)";
-          card.style.outlineOffset = "-2px";
-          card.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
-          found = true;
+      if(!user || !pass || !url){
+        alert("أدخل اسم المستخدم وكلمة المرور ورابط التشغيل");
+        return;
+      }
+
+      document.getElementById("drawerUser").value = user;
+      document.getElementById("drawerPass").value = pass;
+      document.getElementById("drawerUrl").value = url;
+
+      loginScreen.classList.remove("show");
+      mainApp.classList.remove("hidden");
+    }
+
+    function openDrawer(){
+      document.getElementById("drawer").classList.add("show");
+      document.getElementById("overlay").classList.add("show");
+    }
+
+    function closeDrawer(){
+      document.getElementById("drawer").classList.remove("show");
+      document.getElementById("overlay").classList.remove("show");
+    }
+
+    function showPanel(panelId, el){
+      document.querySelectorAll(".drawer-item").forEach(item => item.classList.remove("active"));
+      el.classList.add("active");
+      document.querySelectorAll(".panel").forEach(panel => panel.classList.remove("show"));
+      document.getElementById(panelId).classList.add("show");
+    }
+
+    function savePlayerData(){
+      alert("تم حفظ بيانات المشغل");
+    }
+
+    function logout(){
+      closeDrawer();
+      mainApp.classList.add("hidden");
+      loginScreen.classList.add("show");
+    }
+
+    function searchContent(){
+      const query = document.getElementById("searchInput").value.trim().toLowerCase();
+      const cards = document.querySelectorAll(".searchable-card");
+      const sections = document.querySelectorAll(".searchable-section");
+      const title = document.getElementById("searchResultsTitle");
+      const hero = document.getElementById("heroSection");
+      const tabs = document.getElementById("tabsSection");
+
+      if(query === ""){
+        cards.forEach(card => card.classList.remove("hidden"));
+        sections.forEach(section => section.classList.remove("hidden"));
+        title.classList.remove("show");
+        hero.classList.remove("hidden");
+        tabs.classList.remove("hidden");
+        return;
+      }
+
+      hero.classList.add("hidden");
+      tabs.classList.add("hidden");
+      title.classList.add("show");
+
+      sections.forEach(section => {
+        let hasVisible = false;
+        section.querySelectorAll(".searchable-card").forEach(card => {
+          const cardTitle = (card.dataset.title || "").toLowerCase();
+          const cast = (card.dataset.cast || "").toLowerCase();
+
+          if(cardTitle.includes(query) || cast.includes(query)){
+            card.classList.remove("hidden");
+            hasVisible = true;
+          } else {
+            card.classList.add("hidden");
+          }
+        });
+
+        if(hasVisible){
+          section.classList.remove("hidden");
         } else {
-          card.style.outline = "none";
+          section.classList.add("hidden");
         }
       });
+    }
 
-      if (!found) {
-        alert("لا توجد نتائج في هذه المعاينة الحالية.");
-      }
+    function filterByActor(actorName){
+      const input = document.getElementById("searchInput");
+      input.value = actorName;
+      searchContent();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   </script>
 </body>
-  </html>
+          </html>
