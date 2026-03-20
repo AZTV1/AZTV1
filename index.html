@@ -516,7 +516,7 @@
           </div>
         </div>
       </div>
-    </div><div class="section searchable-section">
+  </div><div class="section searchable-section">
       <div class="section-header">
         <h2>الجديد على XO</h2>
         <span>عرض الكل</span>
@@ -783,4 +783,187 @@
 
     function startLoading(){
       const user = document.getElementById("loginUser").value.trim();
-      const pass = document.getElementById("loginPass").val
+      const pass = document.getElementById("loginPass").value.trim();
+      const url = document.getElementById("loginUrl").value.trim();
+
+      if(!user || !pass || !url){
+        alert("أدخل اسم المستخدم وكلمة المرور ورابط التشغيل");
+        return;
+      }
+
+      document.getElementById("drawerUser").value = user;
+      document.getElementById("drawerPass").value = pass;
+      document.getElementById("drawerUrl").value = url;
+
+      loginScreen.classList.remove("show");
+      loadingScreen.classList.add("show");
+
+      let progress = 0;
+      const loader = setInterval(() => {
+        progress += Math.floor(Math.random() * 12) + 5;
+        if(progress > 100) progress = 100;
+
+        loadingPercent.textContent = progress + "%";
+        loadingBarFill.style.width = progress + "%";
+
+        if(progress === 100){
+          clearInterval(loader);
+          setTimeout(() => {
+            loadingScreen.classList.remove("show");
+            mainApp.classList.remove("hidden");
+          }, 500);
+        }
+      }, 180);
+    }
+
+    function openDrawer(){
+      document.getElementById("drawer").classList.add("show");
+      document.getElementById("overlay").classList.add("show");
+    }
+
+    function closeDrawer(){
+      document.getElementById("drawer").classList.remove("show");
+      document.getElementById("overlay").classList.remove("show");
+    }
+
+    function showPanel(panelId, el){
+      document.querySelectorAll(".drawer-item").forEach(item => item.classList.remove("active"));
+      el.classList.add("active");
+      document.querySelectorAll(".panel").forEach(panel => panel.classList.remove("show"));
+      document.getElementById(panelId).classList.add("show");
+    }
+
+    function savePlayerData(){
+      alert("تم حفظ البيانات");
+    }
+
+    function logout(){
+      closeDrawer();
+      mainApp.classList.add("hidden");
+      loadingScreen.classList.remove("show");
+      loginScreen.classList.add("show");
+    }
+
+    function toggleSearch(){
+      searchBox.classList.toggle("show");
+      if(searchBox.classList.contains("show")){
+        document.getElementById("searchInput").focus();
+      } else {
+        document.getElementById("searchInput").value = "";
+        searchContent();
+      }
+    }
+
+    function toggleSwitch(el){
+      el.classList.toggle("active");
+    }
+
+    function refreshWithLoader(){
+      closeDrawer();
+      loadingScreen.classList.add("show");
+      loadingPercent.textContent = "0%";
+      loadingBarFill.style.width = "0%";
+
+      let progress = 0;
+      const loader = setInterval(() => {
+        progress += 10;
+        if(progress > 100) progress = 100;
+
+        loadingPercent.textContent = progress + "%";
+        loadingBarFill.style.width = progress + "%";
+
+        if(progress === 100){
+          clearInterval(loader);
+          setTimeout(() => {
+            location.reload();
+          }, 350);
+        }
+      }, 120);
+    }
+
+    function searchContent(){
+      const query = document.getElementById("searchInput").value.trim().toLowerCase();
+      const cards = document.querySelectorAll(".searchable-card");
+      const sections = document.querySelectorAll(".searchable-section");
+      const title = document.getElementById("searchResultsTitle");
+      const hero = document.getElementById("heroSection");
+      const tabs = document.getElementById("tabsSection");
+
+      if(query === ""){
+        cards.forEach(card => card.classList.remove("hidden"));
+        sections.forEach(section => section.classList.remove("hidden"));
+        title.classList.remove("show");
+        hero.classList.remove("hidden");
+        tabs.classList.remove("hidden");
+        return;
+      }
+
+      hero.classList.add("hidden");
+      tabs.classList.add("hidden");
+      title.classList.add("show");
+
+      sections.forEach(section => {
+        let hasVisible = false;
+        section.querySelectorAll(".searchable-card").forEach(card => {
+          const cardTitle = (card.dataset.title || "").toLowerCase();
+          const cast = (card.dataset.cast || "").toLowerCase();
+
+          if(cardTitle.includes(query) || cast.includes(query)){
+            card.classList.remove("hidden");
+            hasVisible = true;
+          } else {
+            card.classList.add("hidden");
+          }
+        });
+
+        if(hasVisible){
+          section.classList.remove("hidden");
+        } else {
+          section.classList.add("hidden");
+        }
+      });
+    }
+
+    function filterByActor(actorName){
+      if(!searchBox.classList.contains("show")){
+        searchBox.classList.add("show");
+      }
+      const input = document.getElementById("searchInput");
+      input.value = actorName;
+      searchContent();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function openPlayer(title){
+      document.getElementById("playerNowTitle").textContent = title;
+      document.getElementById("playerModal").classList.add("show");
+    }
+
+    function closePlayer(){
+      document.getElementById("playerModal").classList.remove("show");
+    }
+
+    function updateRiyadhTime(){
+      const now = new Date();
+      const options = {
+        timeZone: "Asia/Riyadh",
+        weekday: "long",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+      };
+      document.getElementById("riyadhTime").textContent =
+        new Intl.DateTimeFormat("ar-SA", options).format(now);
+    }
+
+    updateRiyadhTime();
+    setInterval(updateRiyadhTime, 1000);
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js");
+      });
+    }
+  </script>
+</body>
+                                                                                                         </html>
