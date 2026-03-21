@@ -246,6 +246,23 @@
       transition:width .25s ease;
     }
 
+    .loading-hint{
+      margin-top:12px;
+      text-align:center;
+      color:rgba(255,255,255,.70);
+      font-size:13px;
+      line-height:1.7;
+    }
+
+    .login-error{
+      margin-top:12px;
+      color:#ff9ea3;
+      font-size:13px;
+      text-align:center;
+      line-height:1.8;
+      min-height:22px;
+    }
+
     .overlay{
       position:fixed;
       inset:0;
@@ -325,7 +342,7 @@
 
     .setting-row:last-child{border-bottom:none}
     .setting-name{color:rgba(255,255,255,.82)}
-    .setting-value{color:#fff;text-align:left}
+    .setting-value{color:#fff;text-align:left;word-break:break-word}
 
     .toggle{
       min-width:78px;
@@ -755,7 +772,7 @@
     <div class="login-card">
       <div class="login-logo"><span class="x">X</span><span class="o">O</span></div>
       <div class="login-title">تسجيل الدخول</div>
-      <div class="login-desc">أدخل اسم المستخدم وكلمة المرور ورابط التشغيل للمتابعة.</div>
+      <div class="login-desc">أدخل اسم المستخدم وكلمة المرور ورابط التشغيل الحقيقي للمتابعة.</div>
 
       <div class="field">
         <label>اسم المستخدم</label>
@@ -769,10 +786,11 @@
 
       <div class="field">
         <label>رابط التشغيل</label>
-        <input type="text" id="loginUrl" placeholder="https://your-provider-url.com">
+        <input type="text" id="loginUrl" placeholder="http://example.com:80">
       </div>
 
       <button class="login-btn" onclick="startLoading()">دخول</button>
+      <div class="login-error" id="loginError"></div>
     </div>
   </div>
 
@@ -782,6 +800,7 @@
       <div class="loading-title">جاري جلب البيانات</div>
       <div class="loading-percent" id="loadingPercent">0%</div>
       <div class="loading-bar"><div class="loading-bar-fill" id="loadingBarFill"></div></div>
+      <div class="loading-hint" id="loadingHint">يتم التحقق من بيانات المشغل وقراءة الأقسام.</div>
     </div>
   </div>
 
@@ -886,13 +905,28 @@
       </div>
 
       <div class="field">
-        <label>تاريخ الاشتراك</label>
-        <input type="text" id="drawerStartDate" value="2026-03-21">
+        <label>تاريخ الإنشاء</label>
+        <input type="text" id="drawerStartDate" value="">
       </div>
 
       <div class="field">
         <label>تاريخ الانتهاء</label>
-        <input type="text" id="drawerEndDate" value="2026-04-21">
+        <input type="text" id="drawerEndDate" value="">
+      </div>
+
+      <div class="field">
+        <label>الحالة</label>
+        <input type="text" id="drawerStatus" value="">
+      </div>
+
+      <div class="field">
+        <label>الاتصالات النشطة</label>
+        <input type="text" id="drawerActiveCons" value="">
+      </div>
+
+      <div class="field">
+        <label>أقصى اتصالات</label>
+        <input type="text" id="drawerMaxCons" value="">
       </div>
 
       <button class="save-btn" onclick="savePlayerData()">حفظ البيانات</button>
@@ -923,13 +957,12 @@
       </div>
       <div class="hero-content">
         <div class="hero-title">XO Original</div>
-        <div class="hero-desc">
-          واجهة XO النهائية مع شاشة افتتاحية، تسجيل دخول، تحميل بيانات، توقيت الرياض،
-          إعدادات الترجمة، وخيارات داخل المشغل للترجمة والصوت وحجم الشاشة.
+        <div class="hero-desc" id="heroDesc">
+          تم ربط واجهة XO بتسجيل الدخول الحقيقي بنجاح.
         </div>
         <div class="hero-actions">
           <button class="btn btn-light" onclick="openPlayer('XO Original')">تشغيل</button>
-          <button class="btn btn-dark">التفاصيل</button>
+          <button class="btn btn-dark" onclick="openDrawer()">التفاصيل</button>
         </div>
       </div>
     </div>
@@ -1276,46 +1309,158 @@
     const loadingScreen = document.getElementById("loadingScreen");
     const loadingPercent = document.getElementById("loadingPercent");
     const loadingBarFill = document.getElementById("loadingBarFill");
+    const loadingHint = document.getElementById("loadingHint");
     const mainApp = document.getElementById("mainApp");
     const searchBox = document.getElementById("searchBox");
+    const loginError = document.getElementById("loginError");
+
+    let currentLogin = null;
 
     setTimeout(() => {
       loginScreen.classList.add("show");
+      loadSavedLogin();
     }, 2100);
 
-    function startLoading(){
+    function normalizeUrl(url){
+      let value = (url || "").trim();
+      if(!value) return "";
+      value = value.replace(/\/+$/g, "");
+      if(!/^https?:\/\//i.test(value)){
+        value = "http://" + value;
+      }
+      return value;
+    }
+
+    function unixToDate(value){
+      if(!value) return "";
+      const num = Number(value);
+      if(!num) return String(value);
+      const d = new Date(num * 1000);
+      if(isNaN(d.getTime())) return String(value);
+      return d.toLocaleDateString("ar-SA");
+    }
+
+    function setLoadingProgress(value, text){
+      loadingPercent.textContent = value + "%";
+      loadingBarFill.style.width = value + "%";
+      if(text) loadingHint.textContent = text;
+    }
+
+    function saveLoginLocal(data){
+      localStorage.setItem("xo_login", JSON.stringify(data));
+    }
+
+    function loadSavedLogin(){
+      try{
+        const raw = localStorage.getItem("xo_login");
+        if(!raw) return;
+        const data = JSON.parse(raw);
+
+        if(data.user) document.getElementById("loginUser").value = data.user;
+        if(data.pass) document.getElementById("loginPass").value = data.pass;
+        if(data.url) document.getElementById("loginUrl").value = data.url;
+
+        if(data.user) document.getElementById("drawerUser").value = data.user;
+        if(data.pass) document.getElementById("drawerPass").value = data.pass;
+        if(data.url) document.getElementById("drawerUrl").value = data.url;
+      }catch(e){}
+    }
+
+    function fillAccountInfo(userInfo){
+      document.getElementById("drawerStartDate").value = unixToDate(userInfo.created_at || "");
+      document.getElementById("drawerEndDate").value = unixToDate(userInfo.exp_date || "");
+      document.getElementById("drawerStatus").value = userInfo.status || "";
+      document.getElementById("drawerActiveCons").value = userInfo.active_cons || "";
+      document.getElementById("drawerMaxCons").value = userInfo.max_connections || "";
+    }
+
+    async function startLoading(){
       const user = document.getElementById("loginUser").value.trim();
       const pass = document.getElementById("loginPass").value.trim();
-      const url = document.getElementById("loginUrl").value.trim();
+      const url = normalizeUrl(document.getElementById("loginUrl").value.trim());
+
+      loginError.textContent = "";
 
       if(!user || !pass || !url){
-        alert("أدخل اسم المستخدم وكلمة المرور ورابط التشغيل");
+        loginError.textContent = "أدخل اسم المستخدم وكلمة المرور ورابط التشغيل";
         return;
       }
 
+      document.getElementById("loginUrl").value = url;
       document.getElementById("drawerUser").value = user;
       document.getElementById("drawerPass").value = pass;
       document.getElementById("drawerUrl").value = url;
 
+      currentLogin = { user, pass, url };
+      saveLoginLocal(currentLogin);
+
       loginScreen.classList.remove("show");
       loadingScreen.classList.add("show");
+      setLoadingProgress(8, "بدء التحقق من بيانات الدخول");
 
-      let progress = 0;
-      const loader = setInterval(() => {
-        progress += Math.floor(Math.random() * 12) + 5;
-        if(progress > 100) progress = 100;
+      try{
+        await fakeProgress(25, "جاري الاتصال بالمشغل");
+        const apiUrl = `${url}/player_api.php?username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
 
-        loadingPercent.textContent = progress + "%";
-        loadingBarFill.style.width = progress + "%";
+        const res = await fetch(apiUrl, {
+          method: "GET"
+        });
 
-        if(progress === 100){
-          clearInterval(loader);
-          setTimeout(() => {
-            loadingScreen.classList.remove("show");
-            mainApp.classList.remove("hidden");
-          }, 500);
+        await fakeProgress(55, "تم الاتصال، جاري فحص البيانات");
+
+        if(!res.ok){
+          throw new Error("تعذر الوصول إلى المشغل");
         }
-      }, 180);
+
+        const data = await res.json();
+
+        await fakeProgress(78, "جاري قراءة معلومات الحساب");
+
+        if(!data || !data.user_info){
+          throw new Error("بيانات الدخول غير صحيحة أو رد المشغل غير مكتمل");
+        }
+
+        const status = String(data.user_info.status || "").toLowerCase();
+        if(status && status !== "active"){
+          throw new Error("الحساب غير نشط: " + data.user_info.status);
+        }
+
+        fillAccountInfo(data.user_info);
+
+        const allowedFormats = Array.isArray(data.user_info.allowed_output_formats)
+          ? data.user_info.allowed_output_formats.join(" - ")
+          : "";
+
+        document.getElementById("heroDesc").textContent =
+          `تم تسجيل الدخول بنجاح. الحالة: ${data.user_info.status || "غير معروف"}${allowedFormats ? " | الصيغ: " + allowedFormats : ""}`;
+
+        await fakeProgress(100, "اكتمل جلب البيانات بنجاح");
+
+        setTimeout(() => {
+          loadingScreen.classList.remove("show");
+          mainApp.classList.remove("hidden");
+        }, 500);
+
+      }catch(err){
+        loadingScreen.classList.remove("show");
+        loginScreen.classList.add("show");
+        loginError.textContent = err.message || "فشل تسجيل الدخول";
+      }
+    }
+
+    function fakeProgress(target, text){
+      return new Promise((resolve) => {
+        let current = parseInt(loadingPercent.textContent) || 0;
+        const timer = setInterval(() => {
+          current += 1;
+          if(current > target) current = target;
+          setLoadingProgress(current, text);
+          if(current >= target){
+            clearInterval(timer);
+            resolve();
+          }
+        }, 25);
+      });
     }
 
     function openDrawer(){
@@ -1336,14 +1481,24 @@
     }
 
     function savePlayerData(){
+      const data = {
+        user: document.getElementById("drawerUser").value.trim(),
+        pass: document.getElementById("drawerPass").value.trim(),
+        url: normalizeUrl(document.getElementById("drawerUrl").value.trim())
+      };
+
+      saveLoginLocal(data);
+      currentLogin = data;
       alert("تم حفظ البيانات");
     }
 
     function logout(){
       closeDrawer();
+      localStorage.removeItem("xo_login");
       mainApp.classList.add("hidden");
       loadingScreen.classList.remove("show");
       loginScreen.classList.add("show");
+      loginError.textContent = "";
     }
 
     function toggleSearch(){
@@ -1360,27 +1515,20 @@
       el.classList.toggle("active");
     }
 
-    function refreshWithLoader(){
+    async function refreshWithLoader(){
       closeDrawer();
       loadingScreen.classList.add("show");
-      loadingPercent.textContent = "0%";
-      loadingBarFill.style.width = "0%";
+      setLoadingProgress(0, "جاري تحديث الصفحة");
+      mainApp.classList.add("hidden");
 
-      let progress = 0;
-      const loader = setInterval(() => {
-        progress += 10;
-        if(progress > 100) progress = 100;
+      if(currentLogin && currentLogin.user && currentLogin.pass && currentLogin.url){
+        try{
+          await startLoading();
+          return;
+        }catch(e){}
+      }
 
-        loadingPercent.textContent = progress + "%";
-        loadingBarFill.style.width = progress + "%";
-
-        if(progress === 100){
-          clearInterval(loader);
-          setTimeout(() => {
-            location.reload();
-          }, 350);
-        }
-      }, 120);
+      setTimeout(() => location.reload(), 600);
     }
 
     function searchContent(){
@@ -1463,7 +1611,7 @@
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./service-worker.js");
+        navigator.serviceWorker.register("./service-worker.js").catch(() => {});
       });
     }
   </script>
